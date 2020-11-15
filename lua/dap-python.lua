@@ -178,4 +178,39 @@ function M.test_method(opts)
 end
 
 
+--- Strips extra whitespace at the start of the lines
+--
+-- >>> remove_indent({'    print(10)', '    if True:', '        print(20)'})
+-- {'print(10)', 'if True:', '    print(20)'}
+local function remove_indent(lines)
+  local offset = nil
+  for _, line in ipairs(lines) do
+    local first_non_ws = line:find('[^%s]')
+    if first_non_ws > 1 and (not offset or first_non_ws < offset) then
+      offset = first_non_ws
+    end
+  end
+  if offset then
+    return vim.tbl_map(function(x) return string.sub(x, offset) end, lines)
+  else
+    return lines
+  end
+end
+
+
+--- Debug the selected code
+function M.debug_selection(opts)
+  opts = default_test_opts
+  local start_row, start_col = unpack(api.nvim_buf_get_mark(0, '<'))
+  local end_row, end_col = unpack(api.nvim_buf_get_mark(0, '>'))
+  local lines = api.nvim_buf_get_lines(0, start_row - 1, end_row, false)
+  load_dap().run({
+    type = 'python',
+    request = 'launch',
+    code = table.concat(remove_indent(lines), '\n'),
+    console = opts.console
+  })
+end
+
+
 return M

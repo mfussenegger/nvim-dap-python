@@ -38,9 +38,24 @@ The argument to `setup` is the path to the python installation which contains th
 
 - Call `:lua require('dap').continue()` to start debugging.
 - See `:help dap-mappings` and `:help dap-api`.
-- Use `:lua require('dap-python').test_method` to debug the closest method above the cursor.
+- Use `:lua require('dap-python').test_method()` to debug the closest method above the cursor.
 
-Currently this only works with the `unittest` test framework. `pytest` and others are not supported yet.
+Supported test frameworks are `unittest` and `pytest`. It defaults to using
+`unittest`. To configure `pytest` set the test runner like this:
+
+
+```vimL
+lua require('dap-python').test_runner = 'pytest'
+```
+
+
+## Mappings
+
+
+```vimL
+nnoremap <silent> <leader>dn :lua require('dap-python').test_method()<CR>
+vnoremap <silent> <leader>ds <ESC>:lua require('dap-python').debug_selection()<CR>
+```
 
 
 ## Work in progress
