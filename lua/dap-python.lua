@@ -2,6 +2,9 @@ local api = vim.api
 local M = {}
 
 
+M.test_runner = 'unittest'
+
+
 local get_python_path = function()
   local venv_path = os.getenv('VIRTUAL_ENV')
   if venv_path then
@@ -133,21 +136,45 @@ function M.test_method(opts)
         closest_function = ident
       end
     end
-	end
-  if classname and closest_function then
-    local path = vim.fn.expand('%:r:s?/?.?')
-    local fqn = table.concat({path, classname, closest_function}, '.')
-    print('Running', fqn)
-    load_dap().run({
-      type = 'python',
-      request = 'launch',
-      module = 'unittest',
-      args = {'-v', fqn},
-      console = opts.console
-    })
-  else
-    print('No suitable test method found')
   end
+
+  local test_runner = opts.test_runner or M.test_runner
+  if test_runner == 'unittest' then
+    if classname and closest_function then
+      local path = vim.fn.expand('%:r:s?/?.?')
+      local fqn = table.concat({path, classname, closest_function}, '.')
+      print('Running', fqn)
+      load_dap().run({
+        type = 'python',
+        request = 'launch',
+        module = 'unittest',
+        args = {'-v', fqn},
+        console = opts.console
+      })
+    else
+      print('No suitable test method found')
+    end
+  elseif test_runner == 'pytest' then
+    if closest_function then
+      local path = vim.fn.expand('%:p')
+      -- TODO: execution with class
+      -- local fqn = table.concat({path, classname, closest_function}, '::')
+      local fqn = table.concat({path, closest_function}, '::')
+      print('Running', fqn)
+      load_dap().run({
+        type = 'python',
+        request = 'launch',
+        module = 'pytest',
+        args = {'-s', fqn}, -- -s "allow output to stdout of test"
+        console = opts.console
+      })
+    else
+      print('No suitable test method found')
+    end
+  else
+    print('Test runner "'..test_runner..'" not supported')
+  end
+
 end
 
 
