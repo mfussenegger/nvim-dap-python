@@ -186,11 +186,11 @@ local function remove_indent(lines)
   local offset = nil
   for _, line in ipairs(lines) do
     local first_non_ws = line:find('[^%s]') or 0
-    if first_non_ws > 1 and (not offset or first_non_ws < offset) then
+    if first_non_ws >= 1 and (not offset or first_non_ws < offset) then
       offset = first_non_ws
     end
   end
-  if offset then
+  if offset > 1 then
     return vim.tbl_map(function(x) return string.sub(x, offset) end, lines)
   else
     return lines
@@ -200,14 +200,15 @@ end
 
 --- Debug the selected code
 function M.debug_selection(opts)
-  opts = default_test_opts
+  opts = default_test_opts or opts
   local start_row, _ = unpack(api.nvim_buf_get_mark(0, '<'))
   local end_row, _ = unpack(api.nvim_buf_get_mark(0, '>'))
   local lines = api.nvim_buf_get_lines(0, start_row - 1, end_row, false)
+  local code = table.concat(remove_indent(lines), '\n')
   load_dap().run({
     type = 'python',
     request = 'launch',
-    code = table.concat(remove_indent(lines), '\n'),
+    code = code,
     console = opts.console
   })
 end
