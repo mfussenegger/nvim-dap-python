@@ -106,8 +106,9 @@ function M.test_method(opts)
   local query = vim.treesitter.parse_query(ft, query_str)
   assert(query, 'Could not parse treesitter query. Cannot find test method')
   local parser = vim.treesitter.get_parser(0)
-  local tree = parser:parse()
-  assert(tree, 'Could not parse current buffer with treesitter. Cannot find test method')
+  local trees = parser:parse()
+  assert(trees, 'Could not parse current buffer with treesitter. Cannot find test method')
+  local tree = trees[1]
 
   local row, _ = unpack(api.nvim_win_get_cursor(0))
   local is_class = false
