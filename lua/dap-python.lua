@@ -76,10 +76,14 @@ function M.setup(adapter_python_path, opts)
       request = 'attach';
       name = 'Attach remote';
       host = function()
-        return vim.fn.input('Host: ') or '127.0.0.1'
+        local value = vim.fn.input('Host [127.0.0.1]: ')
+        if value ~= "" then
+          return value
+        end
+        return '127.0.0.1'
       end;
       port = function()
-        return tonumber(vim.fn.input('Port: '))
+        return tonumber(vim.fn.input('Port [5678]: ')) or 5678
       end;
     })
   end
