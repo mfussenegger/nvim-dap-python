@@ -43,7 +43,7 @@ end
 function M.setup(adapter_python_path, opts)
   local dap = load_dap()
   adapter_python_path = vim.fn.expand(adapter_python_path)
-  opts = opts or default_setup_opts
+  opts = vim.tbl_extend('keep', opts or {}, default_setup_opts)
   dap.adapters.python = function(cb, config)
     if config.request == 'attach' then
       cb({
@@ -97,7 +97,7 @@ end
 
 
 function M.test_method(opts)
-  opts = opts or default_test_opts
+  opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
   local ft = vim.api.nvim_buf_get_option(0, 'filetype')
   assert(ft == 'python', 'test_method of dap-python only works for python files, not ' .. ft)
   local query_str = [[
@@ -205,7 +205,7 @@ end
 
 --- Debug the selected code
 function M.debug_selection(opts)
-  opts = default_test_opts or opts
+  opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
   local start_row, _ = unpack(api.nvim_buf_get_mark(0, '<'))
   local end_row, _ = unpack(api.nvim_buf_get_mark(0, '>'))
   local lines = api.nvim_buf_get_lines(0, start_row - 1, end_row, false)
