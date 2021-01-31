@@ -62,11 +62,11 @@ There are two default configurations for launching the debugger, `Launch file` a
 If you want to automatically select one of the two modes, you can set the following variable:
 
 ```vimL
-    -- list both configs (default)
+    " list both configs (default)
     vim.g.dap_custom_config = false
-    -- immediately call 'launch' config
+    " immediately call 'launch' config
     vim.g.dap_custom_config = 'launch'
-    -- immediately call 'attach' config
+    " immediately call 'attach' config
     vim.g.dap_custom_config = 'attach'
 ```
 
