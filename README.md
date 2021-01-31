@@ -48,7 +48,6 @@ Supported test frameworks are `unittest` and `pytest`. It defaults to using
 lua require('dap-python').test_runner = 'pytest'
 ```
 
-
 ## Mappings
 
 
@@ -57,6 +56,19 @@ nnoremap <silent> <leader>dn :lua require('dap-python').test_method()<CR>
 vnoremap <silent> <leader>ds <ESC>:lua require('dap-python').debug_selection()<CR>
 ```
 
+## Auto-Launch Configuration
+
+There are two default configurations for launching the debugger, `Launch file` and `Attach remote`.
+If you want to automatically select one of the two modes, you can set the following variable:
+
+```vimL
+    -- list both configs (default)
+    vim.g.dap_custom_config = false
+    -- immediately call 'launch' config
+    vim.g.dap_custom_config = 'launch'
+    -- immediately call 'attach' config
+    vim.g.dap_custom_config = 'attach'
+```
 
 ## Work in progress
 

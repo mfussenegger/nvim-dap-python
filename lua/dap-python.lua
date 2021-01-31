@@ -64,28 +64,33 @@ function M.setup(adapter_python_path, opts)
 
   if opts.include_configs then
     dap.configurations.python = dap.configurations.python or {}
-    table.insert(dap.configurations.python, {
-      type = 'python';
-      request = 'launch';
-      name = 'Launch file';
-      program = '${file}';
-      console = opts.console;
-    })
-    table.insert(dap.configurations.python, {
-      type = 'python';
-      request = 'attach';
-      name = 'Attach remote';
-      host = function()
-        local value = vim.fn.input('Host [127.0.0.1]: ')
-        if value ~= "" then
-          return value
-        end
-        return '127.0.0.1'
-      end;
-      port = function()
-        return tonumber(vim.fn.input('Port [5678]: ')) or 5678
-      end;
-    })
+    local config_type = vim.g.dap_custom_config
+    if not config_type or config_type == 'launch' then
+      table.insert(dap.configurations.python, {
+        type = 'python';
+        request = 'launch';
+        name = 'Launch file';
+        program = '${file}';
+        console = opts.console;
+      })
+    end
+    if not config_type or config_type == 'attach' then
+      table.insert(dap.configurations.python, {
+        type = 'python';
+        request = 'attach';
+        name = 'Attach remote';
+        host = function()
+          local value = vim.fn.input('Host [127.0.0.1]: ')
+          if value ~= "" then
+            return value
+          end
+          return '127.0.0.1'
+        end;
+        port = function()
+          return tonumber(vim.fn.input('Port [5678]: ')) or 5678
+        end;
+      })
+    end
   end
 end
 
