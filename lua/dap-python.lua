@@ -90,96 +90,147 @@ function M.setup(adapter_python_path, opts)
 end
 
 
-function M.test_class()
-  assert(false, 'test_class is not yet implemented')
+local function get_nodes(query_text, predicate)
+  local end_row = api.nvim_win_get_cursor(0)[1]
+  local ft = api.nvim_buf_get_option(0, 'filetype')
+  assert(ft == 'python', 'test_method of dap-python only works for python files, not ' .. ft)
+  local query = vim.treesitter.parse_query(ft, query_text)
+  assert(query, 'Could not parse treesitter query. Cannot find test')
+  local parser = vim.treesitter.get_parser(0)
+  local root = (parser:parse()[1]):root()
+  local nodes = {}
+  for _, node in query:iter_captures(root, 0, 0, end_row) do
+    if predicate(node) then
+      table.insert(nodes, node)
+    end
+  end
+  return nodes
 end
 
+
+local function get_function_nodes()
+  local query_text = [[
+    (function_definition
+      name: (identifier) @name) @definition.function
+  ]]
+  return get_nodes(query_text, function(node)
+    return node:type() == 'identifier'
+  end)
+end
+
+
+local function get_class_nodes()
+  local query_text = [[
+    (class_definition
+       name: (identifier) @name) @definition.class
+  ]]
+  return get_nodes(query_text, function(node)
+    return node:type() == 'identifier'
+  end)
+end
+
+
+local function get_node_text(node)
+  local row1, col1, row2, col2 = node:range()
+  if row1 == row2 then
+    row2 = row2 + 1
+  end
+  local lines = api.nvim_buf_get_lines(0, row1, row2, true)
+  if #lines == 1 then
+    return (lines[1]):sub(col1 + 1, col2)
+  end
+  return table.concat(lines, '\n')
+end
+
+
+local function get_parent_classname(node)
+  local parent = node:parent()
+  while parent do
+    local type = parent:type()
+    if type == 'class_definition' then
+      for child in parent:iter_children() do
+        if child:type() == 'identifier' then
+          return get_node_text(child)
+        end
+      end
+    end
+    parent = parent:parent()
+  end
+end
+
+
+local function prune_nil(items)
+  return vim.tbl_filter(function(x) return x end, items)
+end
+
+
+local function trigger_test(classname, methodname, opts)
+  local test_runner = opts.test_runner or M.test_runner
+  local test_path
+  local args
+  if test_runner == 'unittest' then
+    local path = vim.fn.expand('%:r:s?/?.?')
+    test_path = table.concat(prune_nil({path, classname, methodname}), '.')
+    args = {'-v', test_path}
+  elseif test_runner == 'pytest' then
+    local path = vim.fn.expand('%:p')
+    test_path = table.concat(prune_nil({path, classname, methodname}), '::')
+    -- -s "allow output to stdout of test"
+    args = {'-s', test_path}
+  else
+    print('Test runner `' .. test_runner .. '` not supported')
+    return
+  end
+  print('Running', test_path)
+  load_dap().run({
+    type = 'python',
+    request = 'launch',
+    module = test_runner,
+    args = args,
+    console = opts.console
+  })
+end
+
+
+local function closest_above_cursor(nodes)
+  local result
+  for _, node in pairs(nodes) do
+    if not result then
+      result = node
+    else
+      local node_row1, _, _, _ = node:range()
+      local result_row1, _, _, _ = result:range()
+      if node_row1 > result_row1 then
+        result = node
+      end
+    end
+  end
+  return result
+end
+
+
+function M.test_class(opts)
+  opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
+  local class_node = closest_above_cursor(get_class_nodes())
+  if not class_node then
+    print('No suitable test class found')
+    return
+  end
+  local class = get_node_text(class_node)
+  trigger_test(class, nil, opts)
+end
 
 
 function M.test_method(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
-  local ft = vim.api.nvim_buf_get_option(0, 'filetype')
-  assert(ft == 'python', 'test_method of dap-python only works for python files, not ' .. ft)
-  local query_str = [[
-    (class_definition
-      name: (identifier) @name) @definition.class
-
-    (function_definition
-      name: (identifier) @name) @definition.function
-  ]]
-  local query = vim.treesitter.parse_query(ft, query_str)
-  assert(query, 'Could not parse treesitter query. Cannot find test method')
-  local parser = vim.treesitter.get_parser(0)
-  local trees = parser:parse()
-  assert(trees, 'Could not parse current buffer with treesitter. Cannot find test method')
-  local tree = trees[1]
-
-  local row, _ = unpack(api.nvim_win_get_cursor(0))
-  local is_class = false
-  local classname = nil
-  local closest_function = nil
-  for id, node in query:iter_captures(tree:root(), 0, 0, row) do
-    local name = query.captures[id]
-    local type = node:type()
-    if name == 'definition.class' then
-      is_class = true
-    end
-    local row1, col1, row2, col2 = node:range()
-    if row1 == row2 then
-      row2 = row2 +1
-    end
-    local lines = api.nvim_buf_get_lines(0, row1, row2, true)
-    local ident = nil
-    if type == 'identifier' and lines and #lines == 1 then
-      ident = (lines[1]):sub(col1 + 1, col2)
-    end
-    if name == 'name' and type == 'identifier' then
-      if is_class then
-        is_class = false
-        classname = ident
-      else
-        closest_function = ident
-      end
-    end
+  local function_node = closest_above_cursor(get_function_nodes())
+  if not function_node then
+    print('No suitable test method found')
+    return
   end
-
-  local test_runner = opts.test_runner or M.test_runner
-  if test_runner == 'unittest' then
-    if classname and closest_function then
-      local path = vim.fn.expand('%:r:s?/?.?')
-      local fqn = table.concat({path, classname, closest_function}, '.')
-      print('Running', fqn)
-      load_dap().run({
-        type = 'python',
-        request = 'launch',
-        module = 'unittest',
-        args = {'-v', fqn},
-        console = opts.console
-      })
-    else
-      print('No suitable test method found')
-    end
-  elseif test_runner == 'pytest' then
-    if closest_function then
-      local path = vim.fn.expand('%:p')
-      -- TODO: execution with class
-      -- local fqn = table.concat({path, classname, closest_function}, '::')
-      local fqn = table.concat({path, closest_function}, '::')
-      print('Running', fqn)
-      load_dap().run({
-        type = 'python',
-        request = 'launch',
-        module = 'pytest',
-        args = {'-s', fqn}, -- -s "allow output to stdout of test"
-        console = opts.console
-      })
-    else
-      print('No suitable test method found')
-    end
-  else
-    print('Test runner "'..test_runner..'" not supported')
-  end
-
+  local class = get_parent_classname(function_node)
+  local function_name = get_node_text(function_node)
+  trigger_test(class, function_name, opts)
 end
 
 
