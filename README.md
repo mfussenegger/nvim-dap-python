@@ -72,3 +72,10 @@ I'm looking for co-maintainers who are:
 [3]: https://github.com/microsoft/debugpy
 [4]: https://github.com/nvim-treesitter/nvim-treesitter
 [5]: https://github.com/tree-sitter/tree-sitter-python
+
+## Alternatives
+
+### [vim-ultest](https://github.com/rcarriga/vim-ultest)
+
+A test runner building upon vim-test with nvim-dap support.
+Aims to work for all python runners.
