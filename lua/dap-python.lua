@@ -181,8 +181,8 @@ local function trigger_test(classname, methodname, opts)
     print('Test runner `' .. test_runner .. '` not supported')
     return
   end
-  print('Running', test_path)
   load_dap().run({
+    name = table.concat(prune_nil({classname, methodname}), '.'),
     type = 'python',
     request = 'launch',
     module = test_runner,
