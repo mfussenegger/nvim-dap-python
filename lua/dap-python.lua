@@ -1,5 +1,6 @@
 local api = vim.api
 local M = {}
+local sessions = {}
 
 
 M.test_runner = 'unittest'
@@ -8,6 +9,53 @@ M.test_runners = {}
 local function prune_nil(items)
   return vim.tbl_filter(function(x) return x end, items)
 end
+
+M.widgets = {}
+M.widgets.sessions = {
+  refresh_listener = 'event_initialized',
+  new_buf = function()
+    local buf = api.nvim_create_buf(false, true)
+    api.nvim_buf_set_option(buf, 'buftype', 'nofile')
+    api.nvim_buf_set_keymap(
+      buf, "n", "<CR>", "<Cmd>lua require('dap.ui').trigger_actions()<CR>", {})
+    api.nvim_buf_set_keymap(
+      buf, "n", "<2-LeftMouse>", "<Cmd>lua require('dap.ui').trigger_actions()<CR>", {})
+    return buf
+  end,
+  render = function(view)
+    local layer = view.layer()
+    local render_session = function(session)
+      local dap = require('dap')
+      local suffix
+      if session.current_frame then
+        suffix = 'Stopped at line ' .. session.current_frame.line
+      elseif session.stopped_thread_id then
+        suffix = 'Stopped'
+      else
+        suffix = 'Running'
+      end
+      local prefix = session == dap.session() and '→ ' or '  '
+      return prefix .. (session.config.name or 'No name') .. ' (' .. suffix .. ')'
+    end
+    local context = {}
+    context.actions = {
+      {
+        label = 'Activate session',
+        fn = function(_, session)
+          if session then
+            require('dap').set_session(session)
+            if vim.bo.bufhidden == 'wipe' then
+              view.close()
+            else
+              view.refresh()
+            end
+          end
+        end
+      }
+    }
+    layer.render(vim.tbl_keys(sessions), render_session, context)
+  end
+}
 
 local is_windows = function()
     return vim.loop.os_uname().sysname:find("Windows", 1, true) and true
@@ -106,6 +154,23 @@ function M.setup(adapter_python_path, opts)
       })
     end
   end
+
+  dap.listeners.after['event_debugpyAttach']['dap-python'] = function(_, config)
+    local session = require('dap.session'):connect(config.connect.host, config.connect.port)
+    session:initialize(config)
+    dap.set_session(session)
+    sessions[session] = true
+  end
+
+  dap.listeners.after.event_initialized['dap-python'] = function(session)
+    sessions[session] = true
+  end
+  local remove_session = function(session)
+    sessions[session] = nil
+  end
+  dap.listeners.after.event_exited['dap-python'] = remove_session
+  dap.listeners.after.event_terminated['dap-python'] = remove_session
+
 
   if opts.include_configs then
     dap.configurations.python = dap.configurations.python or {}
