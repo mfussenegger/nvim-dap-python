@@ -93,6 +93,14 @@ function M.setup(adapter_python_path, opts)
       port = function()
         return tonumber(vim.fn.input('Port [5678]: ')) or 5678
       end;
+      -- These path mappings will work for projects in which the relative path to the
+      -- source code in the local project directory is the same as the absolute path to
+      -- the source code in the container; e.g. local path is {cwd}/app/main.py and the
+      -- remote path (in the container) is /app/main.py
+      pathMappings = {{
+        localRoot = vim.fn.getcwd();
+        remoteRoot = "/";
+      }};
     })
   end
 end
