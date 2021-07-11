@@ -5,7 +5,7 @@ An extension for [nvim-dap][1] providing default configurations for python and m
 
 ## Installation
 
-- Requires [Neovim HEAD/nightly][2]
+- Requires Neovim >= 0.5
 - Requires [nvim-dap][1]
 - Requires [debugpy][3]
 - Install like any other neovim plugin:
@@ -95,7 +95,6 @@ Aims to work for all python runners.
 
 
 [1]: https://github.com/mfussenegger/nvim-dap
-[2]: https://github.com/neovim/neovim/releases/tag/nightly
 [3]: https://github.com/microsoft/debugpy
 [4]: https://github.com/nvim-treesitter/nvim-treesitter
 [5]: https://github.com/tree-sitter/tree-sitter-python
