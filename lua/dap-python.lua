@@ -76,7 +76,7 @@ function M.setup(adapter_python_path, opts)
       type = 'python';
       request = 'launch';
       name = 'Launch file';
-      program = '${file}';
+      program = '${workspaceFolder}/${file}';
       console = opts.console;
     })
     table.insert(dap.configurations.python, {
