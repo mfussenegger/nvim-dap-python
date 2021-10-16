@@ -177,7 +177,7 @@ local function trigger_test(classname, methodname, opts)
   local test_path
   local args
   if test_runner == 'unittest' then
-    local path = vim.fn.expand('%:r:s?/?.?')
+    local path = vim.fn.expand('%:r:gs?/?.?')
     test_path = table.concat(prune_nil({path, classname, methodname}), '.')
     args = {'-v', test_path}
   elseif test_runner == 'pytest' then
