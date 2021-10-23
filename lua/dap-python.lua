@@ -77,6 +77,14 @@ function M.setup(adapter_python_path, opts)
       request = 'launch';
       name = 'Launch file';
       program = '${workspaceFolder}/${file}';
+      args = function()
+        local args_string = vim.fn.input('Arguments: ')
+        local a = {}
+        for arg in string.gmatch(args_string, "%S+") do
+          table.insert(a, arg)
+        end
+        return a
+      end;
       console = opts.console;
     })
     table.insert(dap.configurations.python, {
