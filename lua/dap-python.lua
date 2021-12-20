@@ -94,6 +94,17 @@ function M.setup(adapter_python_path, opts)
       type = 'python';
       request = 'attach';
       name = 'Attach remote';
+      pathMappings = function()
+        local localRoot = vim.fn.input('Local Root [ . ]: ');
+        local remoteRoot = vim.fn.input('Remote Root [ / ]: ');
+        return {{localRoot = localRoot or vim.fn.getcwd(), remoteRoot = remoteRoot or "/"}}
+      end;
+      -- pathMappings = {{
+        -- Update this as needed
+        -- localRoot = vim.fn.getcwd();
+        -- remoteRoot = "/app/maybax";
+      -- }};
+
       host = function()
         local value = vim.fn.input('Host [127.0.0.1]: ')
         if value ~= "" then
