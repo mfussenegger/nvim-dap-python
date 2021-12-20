@@ -94,16 +94,24 @@ function M.setup(adapter_python_path, opts)
       type = 'python';
       request = 'attach';
       name = 'Attach remote';
+
       pathMappings = function()
-        local localRoot = vim.fn.input('Local Root [ . ]: ');
+        local localRoot = vim.fn.input('Local Root [ cwd or . ]: ');
+        if localRoot == "" then
+          localRoot = vim.fn.getcwd();
+        end;
         local remoteRoot = vim.fn.input('Remote Root [ / ]: ');
-        return {{localRoot = localRoot or vim.fn.getcwd(), remoteRoot = remoteRoot or "/"}}
+        if remoteRoot == "" then
+          remoteRoot = "/";
+        end;
+        return  {{localRoot = localRoot, remoteRoot = remoteRoot}}
       end;
-      -- pathMappings = {{
+
+      --pathMappings = {{
         -- Update this as needed
-        -- localRoot = vim.fn.getcwd();
-        -- remoteRoot = "/app/maybax";
-      -- }};
+        --localRoot = vim.fn.getcwd();
+        --remoteRoot = "/app/maybax";
+      --}};
 
       host = function()
         local value = vim.fn.input('Host [127.0.0.1]: ')
