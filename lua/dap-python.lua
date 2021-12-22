@@ -94,7 +94,31 @@ function M.setup(adapter_python_path, opts)
       type = 'python';
       request = 'attach';
       name = 'Attach remote';
-
+      host = function()
+        local value = vim.fn.input('Host [127.0.0.1]: ')
+        if value ~= "" then
+          return value
+        end
+        return '127.0.0.1'
+      end;
+      port = function()
+        return tonumber(vim.fn.input('Port [5678]: ')) or 5678
+      end;
+    })
+    table.insert(dap.configurations.python, {
+      type = 'python';
+      request = 'attach';
+      name = 'Attach remote (with pathMappings)';
+      host = function()
+        local value = vim.fn.input('Host [127.0.0.1]: ')
+        if value ~= "" then
+          return value
+        end
+        return '127.0.0.1'
+      end;
+      port = function()
+        return tonumber(vim.fn.input('Port [5678]: ')) or 5678
+      end;
       pathMappings = function()
         local localRoot = vim.fn.input('Local Root [ cwd or . ]: ');
         if localRoot == "" then
@@ -105,23 +129,6 @@ function M.setup(adapter_python_path, opts)
           remoteRoot = "/";
         end;
         return  {{localRoot = localRoot, remoteRoot = remoteRoot}}
-      end;
-
-      --pathMappings = {{
-        -- Update this as needed
-        --localRoot = vim.fn.getcwd();
-        --remoteRoot = "/app/maybax";
-      --}};
-
-      host = function()
-        local value = vim.fn.input('Host [127.0.0.1]: ')
-        if value ~= "" then
-          return value
-        end
-        return '127.0.0.1'
-      end;
-      port = function()
-        return tonumber(vim.fn.input('Port [5678]: ')) or 5678
       end;
     })
   end
