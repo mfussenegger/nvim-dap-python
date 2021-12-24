@@ -78,12 +78,29 @@ vnoremap <silent> <leader>ds <ESC>:lua require('dap-python').debug_selection()<C
 ```
 
 
-## Looking for Maintainers
+## Custom configuration
 
-I'm looking for co-maintainers who are:
+If you call the `require('dap-python').setup` method it will create a few `nvim-dap` configuration entries. These configurations are general purpose configurations suitable for many use cases, but you may need to customize the configurations - for example if you want to use Docker containers.
 
-- Ensuring test runners like `pytest` are supported as well.
-- Ensuring Windows is well supported
+To add your own entries, you can extend the `dap.configurations.python` list after calling the `setup` function:
+
+```vimL
+lua << EOF
+require('dap-python').setup('/path/to/python')
+table.insert(require('dap').configurations.python, {
+  type = 'python',
+  request = 'launch',
+  name = 'My custom launch configuration',
+  program = '${file}',
+  -- ... more options, see https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings
+})
+EOF
+```
+
+An alternative is to use project specific `.vscode/launch.json` files, see `:help dap-launch.json`.
+
+
+The [Debugpy Wiki][debugpy_wiki] contains a list of all supported configuration options.
 
 
 ## Alternatives
@@ -100,3 +117,4 @@ Aims to work for all python runners.
 [5]: https://github.com/tree-sitter/tree-sitter-python
 [6]: https://github.com/junegunn/vim-plug
 [7]: https://github.com/wbthomason/packer.nvim
+[debugpy_wiki]: https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings
