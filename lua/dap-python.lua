@@ -32,7 +32,8 @@ end
 
 local default_setup_opts = {
   include_configs = true,
-  console = 'integratedTerminal'
+  console = 'integratedTerminal',
+  pythonPath = nil,
 }
 
 local default_test_opts = {
@@ -78,6 +79,7 @@ function M.setup(adapter_python_path, opts)
       name = 'Launch file';
       program = '${file}';
       console = opts.console;
+      pythonPath = opts.pythonPath,
     })
     table.insert(dap.configurations.python, {
       type = 'python';
@@ -89,6 +91,7 @@ function M.setup(adapter_python_path, opts)
         return vim.split(args_string, " +")
       end;
       console = opts.console;
+      pythonPath = opts.pythonPath,
     })
     table.insert(dap.configurations.python, {
       type = 'python';
