@@ -107,6 +107,12 @@ function M.setup(adapter_python_path, opts)
       port = function()
         return tonumber(vim.fn.input('Port [5678]: ')) or 5678
       end;
+      pathMappings = {
+        {
+          localRoot = "${workspaceFolder}",
+          remoteRoot = ".",
+        };
+      };
     })
   end
 end
