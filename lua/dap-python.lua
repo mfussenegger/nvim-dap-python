@@ -23,7 +23,7 @@ end
 
 
 local enrich_config = function(config, on_config)
-  if not config.pythonPath then
+  if not config.pythonPath and not config.python then
     config.pythonPath = get_python_path()
   end
   on_config(config)
