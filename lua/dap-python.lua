@@ -55,10 +55,11 @@ function M.setup(adapter_python_path, opts)
   opts = vim.tbl_extend('keep', opts or {}, default_setup_opts)
   dap.adapters.python = function(cb, config)
     if config.request == 'attach' then
+      local port = (config.connect or config).port
       cb({
         type = 'server';
-        port = assert(config.port, '`port` is required for a python `attach` configuration');
-        host = config.host or '127.0.0.1';
+        port = assert(port, '`connect.port` is required for a python `attach` configuration');
+        host = (config.config or config).host or '127.0.0.1';
         enrich_config = enrich_config;
       })
     else
@@ -97,15 +98,11 @@ function M.setup(adapter_python_path, opts)
       type = 'python';
       request = 'attach';
       name = 'Attach remote';
-      host = function()
-        local value = vim.fn.input('Host [127.0.0.1]: ')
-        if value ~= "" then
-          return value
-        end
-        return '127.0.0.1'
-      end;
-      port = function()
-        return tonumber(vim.fn.input('Port [5678]: ')) or 5678
+      connect = function()
+        local host = vim.fn.input('Host [127.0.0.1]: ')
+        host = host ~= '' and host or '127.0.0.1'
+        local port = tonumber(vim.fn.input('Port [5678]: ')) or 5678
+        return { host = host, port = port }
       end;
     })
   end
