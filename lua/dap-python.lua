@@ -57,7 +57,7 @@ function M.setup(adapter_python_path, opts)
     if config.request == 'attach' then
       cb({
         type = 'server';
-        port = config.port or 0;
+        port = assert(config.port, '`port` is required for a python `attach` configuration');
         host = config.host or '127.0.0.1';
         enrich_config = enrich_config;
       })
