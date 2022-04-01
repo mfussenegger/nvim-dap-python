@@ -61,6 +61,9 @@ function M.setup(adapter_python_path, opts)
         port = assert(port, '`connect.port` is required for a python `attach` configuration');
         host = (config.connect or config).host or '127.0.0.1';
         enrich_config = enrich_config;
+        options = {
+          source_filetype = 'python',
+        }
       })
     else
       cb({
@@ -68,6 +71,9 @@ function M.setup(adapter_python_path, opts)
         command = adapter_python_path;
         args = { '-m', 'debugpy.adapter' };
         enrich_config = enrich_config;
+        options = {
+          source_filetype = 'python',
+        }
       })
     end
   end
