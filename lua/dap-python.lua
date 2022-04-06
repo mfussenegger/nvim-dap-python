@@ -12,6 +12,18 @@ end
 
 local get_python_path = function()
   local venv_path = os.getenv('VIRTUAL_ENV')
+
+  --- Poetry
+  if venv_path == nil then
+    local poetry_handle = io.popen('poetry env info -p', 'r')
+    local poetry_venv_path = poetry_handle:read('*a'):gsub('%s+', '')
+    poetry_handle:close()
+    local poetry_venv_path_exists = os.rename(poetry_venv_path, poetry_venv_path)
+    if poetry_venv_path_exists then
+      venv_path = poetry_venv_path
+    end
+  end
+
   if venv_path then
     if is_windows() then
         return venv_path .. '\\Scripts\\python.exe'
