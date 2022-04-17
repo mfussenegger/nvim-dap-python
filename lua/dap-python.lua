@@ -15,7 +15,7 @@ local get_python_path = function()
 
   --- Poetry
   if venv_path == nil then
-    local poetry_handle = io.popen('poetry env info -p', 'r')
+    local poetry_handle = io.popen('poetry env info -p 2>/dev/null', 'r')
     local poetry_venv_path = poetry_handle:read('*a'):gsub('%s+', '')
     poetry_handle:close()
     local poetry_venv_path_exists = os.rename(poetry_venv_path, poetry_venv_path)
