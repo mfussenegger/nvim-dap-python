@@ -59,12 +59,31 @@ The argument to `setup` is the path to the python installation which contains th
 - See `:help dap-mappings` and `:help dap-api`.
 - Use `:lua require('dap-python').test_method()` to debug the closest method above the cursor.
 
-Supported test frameworks are `unittest` and `pytest`. It defaults to using
-`unittest`. To configure `pytest` set the test runner like this:
+Supported test frameworks are `unittest`, `pytest` and `django`. It defaults to using
+`unittest`.
+
+To configure a different runner, change the `test_runner` variable. For example
+to configure `pytest` set the test runner like this in `vimL`:
 
 
 ```vimL
 lua require('dap-python').test_runner = 'pytest'
+```
+
+You can also add custom runners. An example in `Lua`:
+
+```lua
+local test_runners = require('dap-python').test_runners
+
+-- `test_runners` is a table. The keys are the runner names like `unittest` or `pytest`.
+-- The value is a function that takes three arguments:
+-- The classname, a methodname and the opts
+-- (The `opts` are coming passed through from either `test_method` or `test_class`)
+-- The function must return a module name and the arguments passed to the module as list.
+test_runners.your_runner = function(classname, methodname, opts)
+  local args = {classname, methodname}
+  return 'modulename', args
+end
 ```
 
 
