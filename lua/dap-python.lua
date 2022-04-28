@@ -3,7 +3,11 @@ local M = {}
 
 
 M.test_runner = 'unittest'
+M.test_runners = {}
 
+local function prune_nil(items)
+  return vim.tbl_filter(function(x) return x end, items)
+end
 
 local is_windows = function()
     return vim.loop.os_uname().sysname:find("Windows", 1, true) and true
@@ -45,6 +49,22 @@ local function load_dap()
   local ok, dap = pcall(require, 'dap')
   assert(ok, 'nvim-dap is required to use dap-python')
   return dap
+end
+
+function M.test_runners.unittest(classname, methodname)
+  local path = vim.fn.expand('%:r:gs?/?.?')
+  local test_path = table.concat(prune_nil({path, classname, methodname}), '.')
+  local args = {'-v', test_path}
+  return 'unittest', args
+end
+
+
+function M.test_runners.pytest(classname, methodname)
+  local path = vim.fn.expand('%:p')
+  local test_path = table.concat(prune_nil({path, classname, methodname}), '::')
+  -- -s "allow output to stdout of test"
+  local args = {'-s', test_path}
+  return 'pytest', args
 end
 
 
@@ -184,33 +204,20 @@ local function get_parent_classname(node)
 end
 
 
-local function prune_nil(items)
-  return vim.tbl_filter(function(x) return x end, items)
-end
-
-
 local function trigger_test(classname, methodname, opts)
   local test_runner = opts.test_runner or M.test_runner
-  local test_path
-  local args
-  if test_runner == 'unittest' then
-    local path = vim.fn.expand('%:r:gs?/?.?')
-    test_path = table.concat(prune_nil({path, classname, methodname}), '.')
-    args = {'-v', test_path}
-  elseif test_runner == 'pytest' then
-    local path = vim.fn.expand('%:p')
-    test_path = table.concat(prune_nil({path, classname, methodname}), '::')
-    -- -s "allow output to stdout of test"
-    args = {'-s', test_path}
-  else
-    print('Test runner `' .. test_runner .. '` not supported')
+  local runner = M.test_runners[test_runner]
+  if not runner then
+    vim.notify('Test runner `' .. test_runner .. '` not supported', vim.log.levels.WARN)
     return
   end
+  assert(type(runner) == "function", "Test runner must be a function")
+  local module, args = runner(classname, methodname, opts)
   load_dap().run({
     name = table.concat(prune_nil({classname, methodname}), '.'),
     type = 'python',
     request = 'launch',
-    module = test_runner,
+    module = module,
     args = args,
     console = opts.console
   })
