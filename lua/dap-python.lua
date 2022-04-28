@@ -51,6 +51,7 @@ local function load_dap()
   return dap
 end
 
+
 function M.test_runners.unittest(classname, methodname)
   local path = vim.fn.expand('%:r:gs?/?.?')
   local test_path = table.concat(prune_nil({path, classname, methodname}), '.')
@@ -65,6 +66,14 @@ function M.test_runners.pytest(classname, methodname)
   -- -s "allow output to stdout of test"
   local args = {'-s', test_path}
   return 'pytest', args
+end
+
+
+function M.test_runners.django(classname, methodname)
+  local path = vim.fn.expand('%:r:gs?/?.?')
+  local test_path = table.concat(prune_nil({path, classname, methodname}), '.')
+  local args = {'test', test_path}
+  return 'django', args
 end
 
 
