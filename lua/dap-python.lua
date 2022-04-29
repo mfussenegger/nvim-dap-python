@@ -80,7 +80,7 @@ end
 --- Register the python debug adapter
 function M.setup(adapter_python_path, opts)
   local dap = load_dap()
-  adapter_python_path = vim.fn.expand(adapter_python_path)
+  adapter_python_path = vim.fn.expand(vim.fn.trim(adapter_python_path))
   opts = vim.tbl_extend('keep', opts or {}, default_setup_opts)
   dap.adapters.python = function(cb, config)
     if config.request == 'attach' then
