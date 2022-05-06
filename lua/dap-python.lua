@@ -1,5 +1,7 @@
 local api = vim.api
 local M = {}
+
+local root_session
 local sessions = {}
 
 
@@ -12,7 +14,7 @@ end
 
 M.widgets = {}
 M.widgets.sessions = {
-  refresh_listener = 'event_initialized',
+  refresh_listener = {'event_initialized', 'event_stopped', 'event_terminated'},
   new_buf = function()
     local buf = api.nvim_create_buf(false, true)
     api.nvim_buf_set_option(buf, 'buftype', 'nofile')
@@ -34,8 +36,9 @@ M.widgets.sessions = {
       else
         suffix = 'Running'
       end
+      local config_name = (session.config or {}).name or 'No name'
       local prefix = session == dap.session() and '→ ' or '  '
-      return prefix .. (session.config.name or 'No name') .. ' (' .. suffix .. ')'
+      return prefix .. config_name .. ' (' .. suffix .. ')'
     end
     local context = {}
     context.actions = {
@@ -156,21 +159,39 @@ function M.setup(adapter_python_path, opts)
   end
 
   dap.listeners.after['event_debugpyAttach']['dap-python'] = function(_, config)
-    local session = require('dap.session'):connect(config.connect.host, config.connect.port)
-    session:initialize(config)
-    dap.set_session(session)
-    sessions[session] = true
+    local adapter = {
+      host = config.connect.host,
+      port = config.connect.port,
+    }
+    local session
+    local connect_opts = {}
+    session = require('dap.session'):connect(adapter, connect_opts, function(err)
+      if err then
+        vim.notify('Error connecting to subprocess session: ' .. vim.inspect(err), vim.log.levels.WARN)
+      elseif session then
+        session:initialize(config)
+        dap.set_session(session)
+      end
+    end)
   end
 
   dap.listeners.after.event_initialized['dap-python'] = function(session)
     sessions[session] = true
+    if not root_session then
+      root_session = session
+    end
   end
   local remove_session = function(session)
     sessions[session] = nil
+    if session == root_session then
+      root_session = nil
+    elseif dap.session() == session or dap.session() == nil then
+      dap.set_session(root_session)
+    end
   end
   dap.listeners.after.event_exited['dap-python'] = remove_session
   dap.listeners.after.event_terminated['dap-python'] = remove_session
-
+  dap.listeners.after.disconnected['dap-python'] = remove_session
 
   if opts.include_configs then
     dap.configurations.python = dap.configurations.python or {}
