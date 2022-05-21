@@ -14,21 +14,21 @@ dappy.setup({adapter_python_path}, {opts})
 
     Parameters: ~
         {adapter_python_path}  (string|nil)  Path to the python interpreter. Path must be absolute or in $PATH and needs to have the debugpy package installed. Default is `python3`
-        {opts}                 (SetupOpts)   
+        {opts}                 (SetupOpts)   See |SetupOpts|
 
 
 dappy.test_class({opts})                                      *dappy.test_class*
      Run test class above cursor
 
     Parameters: ~
-        {opts}  (DebugOpts)  
+        {opts}  (DebugOpts)  See |DebugOpts|
 
 
 dappy.test_method({opts})                                    *dappy.test_method*
      Run the test method above cursor
 
     Parameters: ~
-        {opts}  (DebugOpts)  
+        {opts}  (DebugOpts)  See |DebugOpts|
 
 
 dappy.debug_selection({opts})                            *dappy.debug_selection*
