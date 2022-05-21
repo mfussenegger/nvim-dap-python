@@ -1,13 +1,22 @@
+---@mod dap-python Python extension for nvim-dap
+
 local api = vim.api
-local dappy = {}
-dappy.test_runner = 'unittest'
+local M = {}
+
+--- Test runner to use by default. Default is "unittest". See |dap-python.test_runners|
+--- Override this to set a different runner:
+--- ```
+--- require('dap-python').test_runner = "pytest"
+--- ```
+---@type string name of the test runner
+M.test_runner = 'unittest'
 
 --- Table to register test runners.
 --- Built-in are test runners for unittest, pytest and django.
 --- The key is the test runner name, the value a function to generate the
 --- module name to run and its arguments. See |TestRunner|
 ---@type table<string, TestRunner>
-dappy.test_runners = {}
+M.test_runners = {}
 
 local function prune_nil(items)
   return vim.tbl_filter(function(x) return x end, items)
@@ -57,7 +66,7 @@ end
 
 
 ---@private
-function dappy.test_runners.unittest(classname, methodname)
+function M.test_runners.unittest(classname, methodname)
   local path = vim.fn.expand('%:r:gs?/?.?')
   local test_path = table.concat(prune_nil({path, classname, methodname}), '.')
   local args = {'-v', test_path}
@@ -66,7 +75,7 @@ end
 
 
 ---@private
-function dappy.test_runners.pytest(classname, methodname)
+function M.test_runners.pytest(classname, methodname)
   local path = vim.fn.expand('%:p')
   local test_path = table.concat(prune_nil({path, classname, methodname}), '::')
   -- -s "allow output to stdout of test"
@@ -76,7 +85,7 @@ end
 
 
 ---@private
-function dappy.test_runners.django(classname, methodname)
+function M.test_runners.django(classname, methodname)
   local path = vim.fn.expand('%:r:gs?/?.?')
   local test_path = table.concat(prune_nil({path, classname, methodname}), '.')
   local args = {'test', test_path}
@@ -87,7 +96,7 @@ end
 --- Register the python debug adapter
 ---@param adapter_python_path string|nil Path to the python interpreter. Path must be absolute or in $PATH and needs to have the debugpy package installed. Default is `python3`
 ---@param opts SetupOpts See |SetupOpts|
-function dappy.setup(adapter_python_path, opts)
+function M.setup(adapter_python_path, opts)
   local dap = load_dap()
   adapter_python_path = adapter_python_path and vim.fn.expand(vim.fn.trim(adapter_python_path)) or 'python3'
   opts = vim.tbl_extend('keep', opts or {}, default_setup_opts)
@@ -224,8 +233,8 @@ end
 
 ---@param opts DebugOpts
 local function trigger_test(classname, methodname, opts)
-  local test_runner = opts.test_runner or dappy.test_runner
-  local runner = dappy.test_runners[test_runner]
+  local test_runner = opts.test_runner or M.test_runner
+  local runner = M.test_runners[test_runner]
   if not runner then
     vim.notify('Test runner `' .. test_runner .. '` not supported', vim.log.levels.WARN)
     return
@@ -263,7 +272,7 @@ end
 
 --- Run test class above cursor
 ---@param opts DebugOpts See |DebugOpts|
-function dappy.test_class(opts)
+function M.test_class(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
   local class_node = closest_above_cursor(get_class_nodes())
   if not class_node then
@@ -277,7 +286,7 @@ end
 
 --- Run the test method above cursor
 ---@param opts DebugOpts See |DebugOpts|
-function dappy.test_method(opts)
+function M.test_method(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
   local function_node = closest_above_cursor(get_function_nodes())
   if not function_node then
@@ -312,7 +321,7 @@ end
 
 --- Debug the selected code
 ---@param opts DebugOpts
-function dappy.debug_selection(opts)
+function M.debug_selection(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
   local start_row, _ = unpack(api.nvim_buf_get_mark(0, '<'))
   local end_row, _ = unpack(api.nvim_buf_get_mark(0, '>'))
@@ -351,23 +360,25 @@ end
 ---@field code string|nil Code to execute in string form
 ---@field python string[]|nil Path to python executable and interpreter arguments
 ---@field args string[]|nil Command line arguments passed to the program
----@field console "internalConsole"|"integratedTerminal"|"externalTerminal"|nil
+---@field console DebugpyConsole See |DebugpyConsole|
 ---@field cwd string|nil Absolute path to the working directory of the program being debugged.
 ---@field env table|nil Environment variables defined as key value pair
 ---@field stopOnEntry boolean|nil Stop at first line of user code.
 
 
 ---@class DebugOpts
----@field console "internalConsole"|"integratedTerminal"|"externalTerminal"
----@field test_runner "unittest"|"pytest"|"django"|string
+---@field console DebugpyConsole See |DebugpyConsole|
+---@field test_runner "unittest"|"pytest"|"django"|string name of the test runner. Default is |dap-python.test_runner|
 ---@field config DebugpyConfig Overrides for the configuration
 
 ---@class SetupOpts
 ---@field include_configs boolean Add default configurations
----@field console "internalConsole"|"integratedTerminal"|"externalTerminal"|nil
+---@field console DebugpyConsole See |DebugpyConsole|
 ---@field pythonPath string|nil Path to python interpreter. Uses interpreter from `VIRTUAL_ENV` environment variable or `adapter_python_path` by default
 
 
 ---@alias TestRunner fun(classname: string, methodname: string): string module, string[] args
 
-return dappy
+---@alias DebugpyConsole "internalConsole"|"integratedTerminal"|"externalTerminal"|nil
+
+return M
