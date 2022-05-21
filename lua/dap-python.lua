@@ -1,7 +1,5 @@
 local api = vim.api
 local M = {}
-
-
 M.test_runner = 'unittest'
 M.test_runners = {}
 
@@ -52,6 +50,7 @@ local function load_dap()
 end
 
 
+---@private
 function M.test_runners.unittest(classname, methodname)
   local path = vim.fn.expand('%:r:gs?/?.?')
   local test_path = table.concat(prune_nil({path, classname, methodname}), '.')
@@ -60,6 +59,7 @@ function M.test_runners.unittest(classname, methodname)
 end
 
 
+---@private
 function M.test_runners.pytest(classname, methodname)
   local path = vim.fn.expand('%:p')
   local test_path = table.concat(prune_nil({path, classname, methodname}), '::')
@@ -69,6 +69,7 @@ function M.test_runners.pytest(classname, methodname)
 end
 
 
+---@private
 function M.test_runners.django(classname, methodname)
   local path = vim.fn.expand('%:r:gs?/?.?')
   local test_path = table.concat(prune_nil({path, classname, methodname}), '.')
@@ -78,9 +79,11 @@ end
 
 
 --- Register the python debug adapter
+---@param adapter_python_path string|nil Path to the python interpreter. Path must be absolute or in $PATH and needs to have the debugpy package installed. Default is `python3`
+---@param opts SetupOpts
 function M.setup(adapter_python_path, opts)
   local dap = load_dap()
-  adapter_python_path = vim.fn.expand(vim.fn.trim(adapter_python_path))
+  adapter_python_path = adapter_python_path and vim.fn.expand(vim.fn.trim(adapter_python_path)) or 'python3'
   opts = vim.tbl_extend('keep', opts or {}, default_setup_opts)
   dap.adapters.python = function(cb, config)
     if config.request == 'attach' then
@@ -213,6 +216,7 @@ local function get_parent_classname(node)
 end
 
 
+---@param opts DebugOpts
 local function trigger_test(classname, methodname, opts)
   local test_runner = opts.test_runner or M.test_runner
   local runner = M.test_runners[test_runner]
@@ -222,14 +226,15 @@ local function trigger_test(classname, methodname, opts)
   end
   assert(type(runner) == "function", "Test runner must be a function")
   local module, args = runner(classname, methodname, opts)
-  load_dap().run({
+  local config = {
     name = table.concat(prune_nil({classname, methodname}), '.'),
     type = 'python',
     request = 'launch',
     module = module,
     args = args,
     console = opts.console
-  })
+  }
+  load_dap().run(vim.tbl_extend('force', config, opts.config or {}))
 end
 
 
@@ -250,6 +255,8 @@ local function closest_above_cursor(nodes)
 end
 
 
+--- Run test class above cursor
+---@param opts DebugOpts
 function M.test_class(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
   local class_node = closest_above_cursor(get_class_nodes())
@@ -262,6 +269,8 @@ function M.test_class(opts)
 end
 
 
+--- Run the test method above cursor
+---@param opts DebugOpts
 function M.test_method(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
   local function_node = closest_above_cursor(get_function_nodes())
@@ -296,19 +305,60 @@ end
 
 
 --- Debug the selected code
+---@param opts DebugOpts
 function M.debug_selection(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
   local start_row, _ = unpack(api.nvim_buf_get_mark(0, '<'))
   local end_row, _ = unpack(api.nvim_buf_get_mark(0, '>'))
   local lines = api.nvim_buf_get_lines(0, start_row - 1, end_row, false)
   local code = table.concat(remove_indent(lines), '\n')
-  load_dap().run({
+  local config = {
     type = 'python',
     request = 'launch',
     code = code,
     console = opts.console
-  })
+  }
+  load_dap().run(vim.tbl_extend('force', config, opts.config or {}))
 end
 
+
+
+---@class PathMapping
+---@field localRoot string
+---@field remoteRoot string
+
+
+---@class DebugpyConfig
+---@field django boolean|nil Enable django templates. Default is `false`
+---@field gevent boolean|nil Enable debugging of gevent monkey-patched code. Default is `false`
+---@field jinja boolean|nil Enable jinja2 template debugging. Default is `false`
+---@field justMyCode boolean|nil Debug only user-written code. Default is `true`
+---@field pathMappings PathMapping[]|nil Map of local and remote paths.
+---@field pyramid boolean|nil Enable debugging of pyramid applications
+---@field redirectOutput boolean|nil Redirect output to debug console. Default is `false`
+---@field showReturnValue boolean|nil Shows return value of function when stepping
+---@field sudo boolean|nil Run program under elevated permissions. Default is `false`
+
+---@class DebugpyLaunchConfig : DebugpyConfig
+---@field module string|nil Name of the module to debug
+---@field program string|nil Absolute path to the program
+---@field code string|nil Code to execute in string form
+---@field python string[]|nil Path to python executable and interpreter arguments
+---@field args string[]|nil Command line arguments passed to the program
+---@field console "internalConsole"|"integratedTerminal"|"externalTerminal"|nil
+---@field cwd string|nil Absolute path to the working directory of the program being debugged.
+---@field env table|nil Environment variables defined as key value pair
+---@field stopOnEntry boolean|nil Stop at first line of user code.
+
+
+---@class DebugOpts
+---@field console "internalConsole"|"integratedTerminal"|"externalTerminal"
+---@field test_runner "unittest"|"pytest"|"django"|string
+---@field config DebugpyConfig Overrides for the configuration
+
+---@class SetupOpts
+---@field include_configs boolean Add default configurations
+---@field console "internalConsole"|"integratedTerminal"|"externalTerminal"|nil
+---@field pythonPath string|nil Path to python interpreter. Uses interpreter from `VIRTUAL_ENV` environment variable or `adapter_python_path` by default
 
 return M
