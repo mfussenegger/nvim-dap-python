@@ -86,7 +86,7 @@ end
 
 --- Register the python debug adapter
 ---@param adapter_python_path string|nil Path to the python interpreter. Path must be absolute or in $PATH and needs to have the debugpy package installed. Default is `python3`
----@param opts SetupOpts
+---@param opts SetupOpts See |SetupOpts|
 function dappy.setup(adapter_python_path, opts)
   local dap = load_dap()
   adapter_python_path = adapter_python_path and vim.fn.expand(vim.fn.trim(adapter_python_path)) or 'python3'
@@ -262,7 +262,7 @@ end
 
 
 --- Run test class above cursor
----@param opts DebugOpts
+---@param opts DebugOpts See |DebugOpts|
 function dappy.test_class(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
   local class_node = closest_above_cursor(get_class_nodes())
@@ -276,7 +276,7 @@ end
 
 
 --- Run the test method above cursor
----@param opts DebugOpts
+---@param opts DebugOpts See |DebugOpts|
 function dappy.test_method(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
   local function_node = closest_above_cursor(get_function_nodes())
