@@ -1,4 +1,15 @@
-M.setup({adapter_python_path}, {opts})                                 *M.setup*
+dappy.test_runners                                          *dappy.test_runners*
+     Table to register test runners.
+     Built-in are test runners for unittest, pytest and django.
+     The key is the test runner name, the value a function to generate the
+     module name to run and its arguments. See |TestRunner|
+
+    Type: ~
+        (table)  <string, TestRunner>
+
+
+                                                                   *dappy.setup*
+dappy.setup({adapter_python_path}, {opts})
      Register the python debug adapter
 
     Parameters: ~
@@ -6,21 +17,21 @@ M.setup({adapter_python_path}, {opts})                                 *M.setup*
         {opts}                 (SetupOpts)   
 
 
-M.test_class({opts})                                              *M.test_class*
+dappy.test_class({opts})                                      *dappy.test_class*
      Run test class above cursor
 
     Parameters: ~
         {opts}  (DebugOpts)  
 
 
-M.test_method({opts})                                            *M.test_method*
+dappy.test_method({opts})                                    *dappy.test_method*
      Run the test method above cursor
 
     Parameters: ~
         {opts}  (DebugOpts)  
 
 
-M.debug_selection({opts})                                    *M.debug_selection*
+dappy.debug_selection({opts})                            *dappy.debug_selection*
      Debug the selected code
 
     Parameters: ~
@@ -81,6 +92,13 @@ SetupOpts                                                            *SetupOpts*
         {include_configs}  (boolean)                                                        Add default configurations
         {console}          ("internalConsole"|"integratedTerminal"|"externalTerminal"|nil)  
         {pythonPath}       (string|nil)                                                     Path to python interpreter. Uses interpreter from `VIRTUAL_ENV` environment variable or `adapter_python_path` by default
+
+
+TestRunner                                                          *TestRunner*
+    string, methodname: string): string module, string[] args
+
+    Type: ~
+        fun(classname:
 
 
 vim:tw=78:ts=8:noet:ft=help:norl:
