@@ -1,4 +1,18 @@
-dappy.test_runners                                          *dappy.test_runners*
+================================================================================
+Python extension for nvim-dap                                       *dap-python*
+
+M.test_runner                                           *dap-python.test_runner*
+     Test runner to use by default. Default is "unittest". See |dappy.test_runners|
+     Override this to set a different runner:
+     ```
+     require('dap-python').test_runner = "pytest"
+     ```
+
+    Type: ~
+        (string)  name of the test runner
+
+
+M.test_runners                                         *dap-python.test_runners*
      Table to register test runners.
      Built-in are test runners for unittest, pytest and django.
      The key is the test runner name, the value a function to generate the
@@ -8,8 +22,7 @@ dappy.test_runners                                          *dappy.test_runners*
         (table)  <string, TestRunner>
 
 
-                                                                   *dappy.setup*
-dappy.setup({adapter_python_path}, {opts})
+M.setup({adapter_python_path}, {opts})                        *dap-python.setup*
      Register the python debug adapter
 
     Parameters: ~
@@ -17,21 +30,21 @@ dappy.setup({adapter_python_path}, {opts})
         {opts}                 (SetupOpts)   See |SetupOpts|
 
 
-dappy.test_class({opts})                                      *dappy.test_class*
+M.test_class({opts})                                     *dap-python.test_class*
      Run test class above cursor
 
     Parameters: ~
         {opts}  (DebugOpts)  See |DebugOpts|
 
 
-dappy.test_method({opts})                                    *dappy.test_method*
+M.test_method({opts})                                   *dap-python.test_method*
      Run the test method above cursor
 
     Parameters: ~
         {opts}  (DebugOpts)  See |DebugOpts|
 
 
-dappy.debug_selection({opts})                            *dappy.debug_selection*
+M.debug_selection({opts})                           *dap-python.debug_selection*
      Debug the selected code
 
     Parameters: ~
@@ -65,33 +78,33 @@ DebugpyLaunchConfig                                        *DebugpyLaunchConfig*
     : DebugpyConfig
 
     Fields: ~
-        {module}       (string|nil)                                                     Name of the module to debug
-        {program}      (string|nil)                                                     Absolute path to the program
-        {code}         (string|nil)                                                     Code to execute in string form
-        {python}       (string[]|nil)                                                   Path to python executable and interpreter arguments
-        {args}         (string[]|nil)                                                   Command line arguments passed to the program
-        {console}      ("internalConsole"|"integratedTerminal"|"externalTerminal"|nil)  
-        {cwd}          (string|nil)                                                     Absolute path to the working directory of the program being debugged.
-        {env}          (table|nil)                                                      Environment variables defined as key value pair
-        {stopOnEntry}  (boolean|nil)                                                    Stop at first line of user code.
+        {module}       (string|nil)      Name of the module to debug
+        {program}      (string|nil)      Absolute path to the program
+        {code}         (string|nil)      Code to execute in string form
+        {python}       (string[]|nil)    Path to python executable and interpreter arguments
+        {args}         (string[]|nil)    Command line arguments passed to the program
+        {console}      (DebugpyConsole)  See |DebugpyConsole|
+        {cwd}          (string|nil)      Absolute path to the working directory of the program being debugged.
+        {env}          (table|nil)       Environment variables defined as key value pair
+        {stopOnEntry}  (boolean|nil)     Stop at first line of user code.
 
 
 DebugOpts                                                            *DebugOpts*
 
 
     Fields: ~
-        {console}      ("internalConsole"|"integratedTerminal"|"externalTerminal")  
-        {test_runner}  ("unittest"|"pytest"|"django"|string)                        
-        {config}       (DebugpyConfig)                                              Overrides for the configuration
+        {console}      (DebugpyConsole)                       See |DebugpyConsole|
+        {test_runner}  ("unittest"|"pytest"|"django"|string)  name of the test runner. Default is |dappy.test_runner|
+        {config}       (DebugpyConfig)                        Overrides for the configuration
 
 
 SetupOpts                                                            *SetupOpts*
 
 
     Fields: ~
-        {include_configs}  (boolean)                                                        Add default configurations
-        {console}          ("internalConsole"|"integratedTerminal"|"externalTerminal"|nil)  
-        {pythonPath}       (string|nil)                                                     Path to python interpreter. Uses interpreter from `VIRTUAL_ENV` environment variable or `adapter_python_path` by default
+        {include_configs}  (boolean)         Add default configurations
+        {console}          (DebugpyConsole)  See |DebugpyConsole|
+        {pythonPath}       (string|nil)      Path to python interpreter. Uses interpreter from `VIRTUAL_ENV` environment variable or `adapter_python_path` by default
 
 
 TestRunner                                                          *TestRunner*
@@ -99,6 +112,13 @@ TestRunner                                                          *TestRunner*
 
     Type: ~
         fun(classname:
+
+
+DebugpyConsole                                                  *DebugpyConsole*
+
+
+    Type: ~
+        "internalConsole"|"integratedTerminal"|"externalTerminal"|nil
 
 
 vim:tw=78:ts=8:noet:ft=help:norl:
