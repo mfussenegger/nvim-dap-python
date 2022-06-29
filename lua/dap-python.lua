@@ -95,7 +95,7 @@ end
 
 --- Register the python debug adapter
 ---@param adapter_python_path string|nil Path to the python interpreter. Path must be absolute or in $PATH and needs to have the debugpy package installed. Default is `python3`
----@param opts SetupOpts See |SetupOpts|
+---@param opts SetupOpts|nil See |SetupOpts|
 function M.setup(adapter_python_path, opts)
   local dap = load_dap()
   adapter_python_path = adapter_python_path and vim.fn.expand(vim.fn.trim(adapter_python_path)) or 'python3'
