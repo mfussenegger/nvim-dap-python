@@ -18,6 +18,20 @@ M.test_runner = 'unittest'
 ---@type table<string, TestRunner>
 M.test_runners = {}
 
+--- BDD Test runner to use by default. Default is "behave". See |dap-python.bdd_test_runners|
+--- Override this to set a different runner:
+--- ```
+--- require('dap-python').bdd_test_runner = "my_custom_runner"
+--- ```
+---@type string name of the bdd test runner
+M.bdd_test_runner = 'behave'
+
+--- Table to register BDD test runners.
+--- Built-in are test runners for behave
+--- The key is the test runner name, the value a function to generate the
+--- module name to run and its arguments. See |BDDTestRunner|
+---@type table<string, BDDTestRunner>
+M.bdd_test_runners = {}
 
 --- Table for runner specific options
 ---@type table<string, any>
@@ -56,6 +70,7 @@ local default_setup_opts = {
   include_configs = true,
   console = 'integratedTerminal',
   pythonPath = nil,
+  nocov = false,
 }
 
 local default_test_opts = {
@@ -98,7 +113,7 @@ function M.test_runners.django(classname, methodname)
 end
 
 ---@private
-function M.test_runners.behave(line_number)
+function M.bdd_test_runners.behave(line_number)
   local path = vim.fn.expand('%:p')
   local test_path = table.concat(prune_nil({ path, line_number }), ':')
   local args = { '--no-capture', test_path }
@@ -237,11 +252,13 @@ local function get_parent_classname(node)
   end
 end
 
----@param opts DebugOpts
-local function trigger_scenario(line_number, scenario, opts)
-  module, args = M.test_runners.behave(line_number)
+---@param opts BDDDebugOpts
+local function trigger_bdd_test(line_number, feature, scenario, opts)
+  local test_runner = opts.bdd_test_runner or M.bdd_test_runner
+  local runner = M.bdd_test_runners[test_runner]
+  local module, args = runner(line_number)
   local config = {
-    name = scenario,
+    name = table.concat(prune_nil({ feature, scenario }), '.'),
     type = 'python',
     request = 'launch',
     module = module,
@@ -288,17 +305,21 @@ local function closest_above_cursor(nodes)
   return result
 end
 
-local function closest_scenario_above_cursor()
+local function closest_bdd_above_cursor(bdd_type)
+  local pattern = '^%s*Scenario: (.*)'
+  if bdd_type == 'feature' then
+    pattern = '^Feature: (.*)'
+  end
   local ft = api.nvim_buf_get_option(0, 'filetype')
   assert(ft == 'cucumber', 'test_scenario of dap-python only works for cucumber files, not ' .. ft)
   local cursor = api.nvim_win_get_cursor(0)[1]
-  local scenario = nil
-  while (scenario == nil and cursor >= 1) do
+  local description = nil
+  while (description == nil and cursor >= 1) do
     cursor = cursor - 1
     local line = api.nvim_buf_get_lines(0, cursor, cursor + 1, false)[1]
-    scenario = line:match('%s*Scenario: (.*)')
+    description = line:match(pattern)
   end
-  return cursor, scenario
+  return cursor, description
 end
 
 --- Run test class above cursor
@@ -330,17 +351,27 @@ end
 
 function M.test_feature(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
-  trigger_scenario(0, 'Feature', opts)
+  local _, feature = closest_bdd_above_cursor('feature')
+  if not feature then
+    print('No suitable feature found')
+    return
+  end
+  trigger_bdd_test(0, feature, nil, opts)
 end
 
 function M.test_scenario(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
-  local line, scenario = closest_scenario_above_cursor()
+  local line, scenario = closest_bdd_above_cursor('scenario')
   if not scenario then
     print('No suitable scenario found')
     return
   end
-  trigger_scenario(line, scenario, opts)
+  local feature = closest_bdd_above_cursor('feature')
+  if not feature then
+    print('No suitable feature found')
+    return
+  end
+  trigger_bdd_test(line, feature, scenario, opts)
 end
 
 --- Strips extra whitespace at the start of the lines
@@ -412,13 +443,20 @@ end
 ---@field test_runner "unittest"|"pytest"|"django"|string name of the test runner. Default is |dap-python.test_runner|
 ---@field config DebugpyConfig Overrides for the configuration
 
+---@class BDDDebugOpts
+---@field console DebugpyConsole See |DebugpyConsole|
+---@field bdd_test_runner "unittest"|"pytest"|"django"|string name of the test runner. Default is |dap-python.test_runner|
+---@field config DebugpyConfig Overrides for the configuration
+
 ---@class SetupOpts
 ---@field include_configs boolean Add default configurations
+---@field nocov boolean Add a --no-cov flat to test runner. Default is false
 ---@field console DebugpyConsole See |DebugpyConsole|
 ---@field pythonPath string|nil Path to python interpreter. Uses interpreter from `VIRTUAL_ENV` environment variable or `adapter_python_path` by default
 
 
 ---@alias TestRunner fun(classname: string, methodname: string): string module, string[] args
+---@alias BDDTestRunner fun(line:integer): string module, string[] args
 
 ---@alias DebugpyConsole "internalConsole"|"integratedTerminal"|"externalTerminal"|nil
 

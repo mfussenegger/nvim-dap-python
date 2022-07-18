@@ -12,14 +12,25 @@ M.test_runner                                           *dap-python.test_runner*
         (string)  name of the test runner
 
 
-M.test_runners                                         *dap-python.test_runners*
-     Table to register test runners.
-     Built-in are test runners for unittest, pytest and django.
-     The key is the test runner name, the value a function to generate the
-     module name to run and its arguments. See |TestRunner|
+M.bdd_test_runner                                   *dap-python.bdd_test_runner*
+     BDD test runner to use by default. Default is "behave". See |dappy.bdd_test_runners|
+     Override this to set a different runner:
+     ```
+     require('dap-python').bdd_test_runner = "my_custom_runner"
+     ```
 
     Type: ~
-        (table)  <string, TestRunner>
+        (string)  name of the bdd test runner
+
+
+M.bdd_test_runners                                 *dap-python.bdd_test_runners*
+     Table to register test runners.
+     Built-in is a test runner for cucumber.
+     The key is the test runner name, the value a function to generate the
+     module name to run and its arguments. See |BDDTestRunner|
+
+    Type: ~
+        (table)  <string, BDDTestRunner>
 
 
 M.setup({adapter_python_path}, {opts})                        *dap-python.setup*
@@ -42,6 +53,20 @@ M.test_method({opts})                                   *dap-python.test_method*
 
     Parameters: ~
         {opts}  (DebugOpts)  See |DebugOpts|
+
+
+M.test_feature({opts})                                 *dap-python.test_feature*
+     Run feature above cursor
+
+    Parameters: ~
+        {opts}  (BDDDebugOpts)  See |BDDDebugOpts|
+
+
+M.test_scenario({opts})                               *dap-python.test_scenario*
+     Run the scenario above cursor
+
+    Parameters: ~
+        {opts}  (BDDDebugOpts)  See |BDDDebugOpts|
 
 
 M.debug_selection({opts})                           *dap-python.debug_selection*
@@ -98,6 +123,15 @@ DebugOpts                                                            *DebugOpts*
         {config}       (DebugpyConfig)                        Overrides for the configuration
 
 
+BDDDebugOpts                                                      *BDDDebugOpts*
+
+
+    Fields: ~
+        {console}          (DebugpyConsole)                   See |DebugpyConsole|
+        {bdd_test_runner}  ("cucumber"|string)                name of the test runner. Default is |dappy.bdd_test_runner|
+        {config}           (DebugpyConfig)                    Overrides for the configuration
+
+
 SetupOpts                                                            *SetupOpts*
 
 
@@ -108,10 +142,17 @@ SetupOpts                                                            *SetupOpts*
 
 
 TestRunner                                                          *TestRunner*
-    string, methodname: string): string module, string[] args
+    fun(classname: string, methodname: string): string module, string[] args
 
     Type: ~
-        fun(classname:
+        fun(classname: string, methodname: string): string module, string[] args
+
+
+BDDTestRunner                                                    *BDDTestRunner*
+    fun(line_number: integer): string module, string[] args
+
+    Type: ~
+        fun(line_number: integer): string module, string[] args
 
 
 DebugpyConsole                                                  *DebugpyConsole*
