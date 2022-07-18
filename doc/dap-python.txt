@@ -23,6 +23,16 @@ M.bdd_test_runner                                   *dap-python.bdd_test_runner*
         (string)  name of the bdd test runner
 
 
+M.test_runners                                         *dap-python.test_runners*
+     Table to register test runners.
+     Built-in are test runners for unittest, pytest, and django.
+     The key is the test runner name, the value a function to generate the
+     module name to run and its arguments. See |TestRunner|
+
+    Type: ~
+        (table)  <string, TestRunner>
+
+
 M.bdd_test_runners                                 *dap-python.bdd_test_runners*
      Table to register test runners.
      Built-in is a test runner for cucumber.
