@@ -295,7 +295,7 @@ local function closest_scenario_above_cursor()
   local scenario = nil
   while (scenario == nil and cursor >= 1) do
     cursor = cursor - 1
-    local line = api.nvim_buf_get_lines(0, cursor, cursor + 1, false)
+    local line = api.nvim_buf_get_lines(0, cursor, cursor + 1, false)[1]
     scenario = line:match('%s*Scenario: (.*)')
   end
   return cursor, scenario
