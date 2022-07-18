@@ -84,7 +84,7 @@ function M.test_runners.pytest(classname, methodname)
   -- -s "allow output to stdout of test"
   local args = { '-s', test_path }
   if M.runner_opts.nocov then
-    table.insert(args, 0, '--no-cov')
+    table.insert(args, 1, '--no-cov')
   end
   return 'pytest', args
 end
