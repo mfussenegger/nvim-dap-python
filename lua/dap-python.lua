@@ -33,10 +33,6 @@ M.bdd_test_runner = 'behave'
 ---@type table<string, BDDTestRunner>
 M.bdd_test_runners = {}
 
---- Table for runner specific options
----@type table<string, any>
-M.runner_opts = {}
-
 local function prune_nil(items)
   return vim.tbl_filter(function(x) return x end, items)
 end
@@ -70,7 +66,6 @@ local default_setup_opts = {
   include_configs = true,
   console = 'integratedTerminal',
   pythonPath = nil,
-  nocov = false,
 }
 
 local default_test_opts = {
@@ -98,9 +93,6 @@ function M.test_runners.pytest(classname, methodname)
   local test_path = table.concat(prune_nil({ path, classname, methodname }), '::')
   -- -s "allow output to stdout of test"
   local args = { '-s', test_path }
-  if M.runner_opts.nocov then
-    table.insert(args, 1, '--no-cov')
-  end
   return 'pytest', args
 end
 
@@ -450,7 +442,6 @@ end
 
 ---@class SetupOpts
 ---@field include_configs boolean Add default configurations
----@field nocov boolean Add a --no-cov flat to test runner. Default is false
 ---@field console DebugpyConsole See |DebugpyConsole|
 ---@field pythonPath string|nil Path to python interpreter. Uses interpreter from `VIRTUAL_ENV` environment variable or `adapter_python_path` by default
 
