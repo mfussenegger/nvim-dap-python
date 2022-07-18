@@ -18,12 +18,17 @@ M.test_runner = 'unittest'
 ---@type table<string, TestRunner>
 M.test_runners = {}
 
+
+--- Table for runner specific options
+---@type table<string, any>
+M.runner_opts = {}
+
 local function prune_nil(items)
   return vim.tbl_filter(function(x) return x end, items)
 end
 
 local is_windows = function()
-    return vim.loop.os_uname().sysname:find("Windows", 1, true) and true
+  return vim.loop.os_uname().sysname:find("Windows", 1, true) and true
 end
 
 
@@ -31,7 +36,7 @@ local get_python_path = function()
   local venv_path = os.getenv('VIRTUAL_ENV')
   if venv_path then
     if is_windows() then
-        return venv_path .. '\\Scripts\\python.exe'
+      return venv_path .. '\\Scripts\\python.exe'
     end
     return venv_path .. '/bin/python'
   end
@@ -64,34 +69,41 @@ local function load_dap()
   return dap
 end
 
-
 ---@private
 function M.test_runners.unittest(classname, methodname)
   local path = vim.fn.expand('%:.:r:gs?/?.?')
-  local test_path = table.concat(prune_nil({path, classname, methodname}), '.')
-  local args = {'-v', test_path}
+  local test_path = table.concat(prune_nil({ path, classname, methodname }), '.')
+  local args = { '-v', test_path }
   return 'unittest', args
 end
-
 
 ---@private
 function M.test_runners.pytest(classname, methodname)
   local path = vim.fn.expand('%:p')
-  local test_path = table.concat(prune_nil({path, classname, methodname}), '::')
+  local test_path = table.concat(prune_nil({ path, classname, methodname }), '::')
   -- -s "allow output to stdout of test"
-  local args = {'-s', test_path}
+  local args = { '-s', test_path }
+  if M.runner_opts.nocov then
+    table.insert(args, 0, '--no-cov')
+  end
   return 'pytest', args
 end
-
 
 ---@private
 function M.test_runners.django(classname, methodname)
   local path = vim.fn.expand('%:r:gs?/?.?')
-  local test_path = table.concat(prune_nil({path, classname, methodname}), '.')
-  local args = {'test', test_path}
+  local test_path = table.concat(prune_nil({ path, classname, methodname }), '.')
+  local args = { 'test', test_path }
   return 'django', args
 end
 
+---@private
+function M.test_runners.behave(line_number)
+  local path = vim.fn.expand('%:p')
+  local test_path = table.concat(prune_nil({ path, line_number }), ':')
+  local args = { '--no-capture', test_path }
+  return 'behave', args
+end
 
 --- Register the python debug adapter
 ---@param adapter_python_path string|nil Path to the python interpreter. Path must be absolute or in $PATH and needs to have the debugpy package installed. Default is `python3`
@@ -161,7 +173,6 @@ function M.setup(adapter_python_path, opts)
   end
 end
 
-
 local function get_nodes(query_text, predicate)
   local end_row = api.nvim_win_get_cursor(0)[1]
   local ft = api.nvim_buf_get_option(0, 'filetype')
@@ -179,7 +190,6 @@ local function get_nodes(query_text, predicate)
   return nodes
 end
 
-
 local function get_function_nodes()
   local query_text = [[
     (function_definition
@@ -190,7 +200,6 @@ local function get_function_nodes()
   end)
 end
 
-
 local function get_class_nodes()
   local query_text = [[
     (class_definition
@@ -200,7 +209,6 @@ local function get_class_nodes()
     return node:type() == 'identifier'
   end)
 end
-
 
 local function get_node_text(node)
   local row1, col1, row2, col2 = node:range()
@@ -213,7 +221,6 @@ local function get_node_text(node)
   end
   return table.concat(lines, '\n')
 end
-
 
 local function get_parent_classname(node)
   local parent = node:parent()
@@ -230,6 +237,19 @@ local function get_parent_classname(node)
   end
 end
 
+---@param opts DebugOpts
+local function trigger_scenario(line_number, scenario, opts)
+  module, args = M.test_runners.behave(line_number)
+  local config = {
+    name = scenario,
+    type = 'python',
+    request = 'launch',
+    module = module,
+    args = args,
+    console = opts.console
+  }
+  load_dap().run(vim.tbl_extend('force', config, opts.config or {}))
+end
 
 ---@param opts DebugOpts
 local function trigger_test(classname, methodname, opts)
@@ -242,7 +262,7 @@ local function trigger_test(classname, methodname, opts)
   assert(type(runner) == "function", "Test runner must be a function")
   local module, args = runner(classname, methodname)
   local config = {
-    name = table.concat(prune_nil({classname, methodname}), '.'),
+    name = table.concat(prune_nil({ classname, methodname }), '.'),
     type = 'python',
     request = 'launch',
     module = module,
@@ -251,7 +271,6 @@ local function trigger_test(classname, methodname, opts)
   }
   load_dap().run(vim.tbl_extend('force', config, opts.config or {}))
 end
-
 
 local function closest_above_cursor(nodes)
   local result
@@ -269,6 +288,18 @@ local function closest_above_cursor(nodes)
   return result
 end
 
+local function closest_scenario_above_cursor()
+  local ft = api.nvim_buf_get_option(0, 'filetype')
+  assert(ft == 'cucumber', 'test_scenario of dap-python only works for cucumber files, not ' .. ft)
+  local cursor = api.nvim_win_get_cursor(0)[1]
+  local scenario = nil
+  while (scenario == nil and cursor >= 1) do
+    cursor = cursor - 1
+    local line = api.nvim_buf_get_lines(0, cursor, cursor + 1, false)
+    scenario = line:match('%s*Scenario: (.*)')
+  end
+  return cursor, scenario
+end
 
 --- Run test class above cursor
 ---@param opts DebugOpts See |DebugOpts|
@@ -282,7 +313,6 @@ function M.test_class(opts)
   local class = get_node_text(class_node)
   trigger_test(class, nil, opts)
 end
-
 
 --- Run the test method above cursor
 ---@param opts DebugOpts See |DebugOpts|
@@ -298,6 +328,20 @@ function M.test_method(opts)
   trigger_test(class, function_name, opts)
 end
 
+function M.test_feature(opts)
+  opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
+  trigger_scenario(0, 'Feature', opts)
+end
+
+function M.test_scenario(opts)
+  opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
+  local line, scenario = closest_scenario_above_cursor()
+  if not scenario then
+    print('No suitable scenario found')
+    return
+  end
+  trigger_scenario(line, scenario, opts)
+end
 
 --- Strips extra whitespace at the start of the lines
 --
@@ -318,7 +362,6 @@ local function remove_indent(lines)
   end
 end
 
-
 --- Debug the selected code
 ---@param opts DebugOpts
 function M.debug_selection(opts)
@@ -335,8 +378,6 @@ function M.debug_selection(opts)
   }
   load_dap().run(vim.tbl_extend('force', config, opts.config or {}))
 end
-
-
 
 ---@class PathMapping
 ---@field localRoot string
