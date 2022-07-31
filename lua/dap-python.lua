@@ -194,7 +194,7 @@ end
 local function get_class_nodes()
   local query_text = [[
     (class_definition
-       name: (identifier) @name) @definition.class
+      name: (identifier) @name) @definition.class
   ]]
   return get_nodes(query_text, function(node)
     return node:type() == 'identifier'
