@@ -10,7 +10,6 @@ local M = {}
 --- ```
 ---@type string name of the test runner
 M.test_runner = 'pytest'
-M.opts = {}
 
 --- Table to register test runners.
 --- Built-in are test runners for unittest, pytest and django.
@@ -55,6 +54,7 @@ local default_setup_opts = {
   test_runner = 'pytest',
   test_runner_config = {},
 }
+M.opts = default_setup_opts
 
 local function load_dap()
   local ok, dap = pcall(require, 'dap')
@@ -63,12 +63,23 @@ local function load_dap()
 end
 
 --@private
-local function M.load_opts(opts)
-  if next(M.opts) then
-    result = vim.tbl_extend('keep', opts or {}, M.opts);
-  else
-    result = vim.tbl_extend('keep', opts or {}, default_setup_opts);
+local function tprint (tbl, indent)
+  if not indent then indent = 0 end
+  for k, v in pairs(tbl) do
+    formatting = string.rep("  ", indent) .. k .. ": "
+    if type(v) == "table" then
+      print(formatting)
+      tprint(v, indent+1)
+    else
+      print(formatting .. v)
+    end
   end
+end
+
+--@private
+local function M.load_opts(opts)
+  result = vim.tbl_extend('keep', opts or {}, default_setup_opts);
+  tprint(tbl)
   return result
 end
 
@@ -84,7 +95,6 @@ end
 function M.test_runners.pytest(classname, methodname)
   local path = vim.fn.expand('%:p')
   local test_path = table.concat(prune_nil({ path, classname, methodname }), '::')
-  -- -s "allow output to stdout of test"
   local args = { '-s', test_path }
   return 'pytest', args
 end
@@ -136,7 +146,7 @@ function M.setup(adapter_python_path, opts)
       request = 'launch';
       name = 'Launch file';
       program = '${file}';
-      env = vim.env;
+      env = vim.fn.environ();
       console = M.opts.console;
       pythonPath = M.opts.pythonPath,
     })
@@ -149,7 +159,7 @@ function M.setup(adapter_python_path, opts)
         local args_string = vim.fn.input('Arguments: ')
         return vim.split(args_string, " +")
       end;
-      env = vim.env;
+      env = vim.fn.environ();
       console = M.opts.console;
       pythonPath = M.opts.pythonPath,
     })
@@ -157,7 +167,7 @@ function M.setup(adapter_python_path, opts)
       type = 'python';
       request = 'attach';
       name = 'Attach remote';
-      env = vim.env,
+      env = vim.fn.environ(),
       connect = function()
         local host = vim.fn.input('Host [127.0.0.1]: ')
         host = host ~= '' and host or '127.0.0.1'
@@ -248,7 +258,7 @@ local function trigger_test(classname, methodname, opts)
     name = table.concat(prune_nil({ classname, methodname }), '.'),
     args = args,
     console = opts.console or M.opts.console,
-    env = vim.env,
+    env = vim.fn.environ(),
     module = module,
   }, opts.test_runner_config);
   config = vim.tbl_extend('force', config, opts.config or {})
@@ -335,7 +345,7 @@ function M.debug_selection(opts)
     request = 'launch',
     code = code,
     console = opts.console,
-    env = vim.env,
+    env = vim.fn.environ(),
   }, opts.test_runner_config);
   config = vim.tbl_extend('force', config, opts.config or {})
   for k, v in pairs(config) do
