@@ -48,6 +48,7 @@ end
 
 local default_setup_opts = {
   console = 'integratedTerminal',
+  debug = false,
   include_configs = true,
   pythonPath = nil,
   test_runner = 'pytest',
@@ -79,8 +80,8 @@ end
 
 --@private
 local function load_opts(opts)
-  result = vim.tbl_extend('keep', opts or {}, default_setup_opts);
-  tprint(result)
+  result = vim.tbl_extend('keep', opts or {}, M.opts);
+  if result.debug then tprint(result) end
   return result
 end
 
