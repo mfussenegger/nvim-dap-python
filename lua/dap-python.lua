@@ -10,7 +10,7 @@ local M = {}
 --- ```
 ---@type string name of the test runner
 M.test_runner = 'pytest'
-M.test_runner_launch = 0
+M.opts = {}
 
 --- Table to register test runners.
 --- Built-in are test runners for unittest, pytest and django.
@@ -49,9 +49,11 @@ end
 
 
 local default_setup_opts = {
-  include_configs = true,
   console = 'integratedTerminal',
+  include_configs = true,
   pythonPath = nil,
+  test_runner = 'pytest',
+  test_runner_config = {},
 }
 
 local default_test_opts = {
@@ -97,6 +99,7 @@ function M.setup(adapter_python_path, opts)
   local dap = load_dap()
   adapter_python_path = adapter_python_path and vim.fn.expand(vim.fn.trim(adapter_python_path)) or 'python3'
   opts = vim.tbl_extend('keep', opts or {}, default_setup_opts)
+  M.opts = opts
   dap.adapters.python = function(cb, config)
     if config.request == 'attach' then
       local port = (config.connect or config).port
@@ -225,6 +228,26 @@ local function get_parent_classname(node)
   end
 end
 
+local function deepcopy(o, seen)
+  seen = seen or {}
+  if o == nil then return nil end
+  if seen[o] then return seen[o] end
+
+  local no
+  if type(o) == 'table' then
+    no = {}
+    seen[o] = no
+
+    for k, v in next, o, nil do
+      no[deepcopy(k, seen)] = deepcopy(v, seen)
+    end
+    setmetatable(no, deepcopy(getmetatable(o), seen))
+  else -- number, string, boolean, etc
+    no = o
+  end
+  return no
+end
+
 ---@param opts DebugOpts
 local function trigger_test(classname, methodname, opts)
   local test_runner = opts.test_runner or M.test_runner
@@ -235,16 +258,20 @@ local function trigger_test(classname, methodname, opts)
   end
   assert(type(runner) == "function", "Test runner must be a function")
   local module, args = runner(classname, methodname)
-  local dap = load_dap()
-  local config = dap.configuration.python[M.test_runner_launch] or {
-    name = table.concat(prune_nil({ classname, methodname }), '.'),
+  local config = vim.tbl_extend("keep", {
     type = 'python',
     request = 'launch',
+    name = table.concat(prune_nil({ classname, methodname }), '.'),
     args = args,
+    console = opts.console,
     env = vim.fn.environ(),
-    console = opts.console
-  }
-  config.module = module
+    module = module,
+  }, M.opts.test_runner_config);
+  for k, v in pairs(config) do
+    v_out = v
+    if type(v) == 'table' then v_out = type(v) end
+    print('"' .. k .. '"=' .. v_out)
+  end
   load_dap().run(vim.tbl_extend('force', config, opts.config or {}))
 end
 
@@ -322,7 +349,8 @@ function M.debug_selection(opts)
     type = 'python',
     request = 'launch',
     code = code,
-    console = opts.console
+    console = opts.console,
+    env = vim.fn.environ(),
   }
   load_dap().run(vim.tbl_extend('force', config, opts.config or {}))
 end
