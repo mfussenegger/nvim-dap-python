@@ -235,6 +235,7 @@ local function trigger_test(classname, methodname, opts)
   end
   assert(type(runner) == "function", "Test runner must be a function")
   local module, args = runner(classname, methodname)
+  local dap = load_dap()
   local config = dap.configuration.python[M.test_runner_launch] or {
     name = table.concat(prune_nil({ classname, methodname }), '.'),
     type = 'python',
