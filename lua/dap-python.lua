@@ -267,12 +267,13 @@ local function trigger_test(classname, methodname, opts)
     env = vim.fn.environ(),
     module = module,
   }, M.opts.test_runner_config);
+  config = vim.tbl_extend('force', config, opts.config or {})
   for k, v in pairs(config) do
     v_out = v
     if type(v) == 'table' then v_out = type(v) end
     print('"' .. k .. '"=' .. v_out)
   end
-  load_dap().run(vim.tbl_extend('force', config, opts.config or {}))
+  load_dap().run(config)
 end
 
 local function closest_above_cursor(nodes)
@@ -341,18 +342,25 @@ end
 ---@param opts DebugOpts
 function M.debug_selection(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
+  M.opts = opts
   local start_row, _ = unpack(api.nvim_buf_get_mark(0, '<'))
   local end_row, _ = unpack(api.nvim_buf_get_mark(0, '>'))
   local lines = api.nvim_buf_get_lines(0, start_row - 1, end_row, false)
   local code = table.concat(remove_indent(lines), '\n')
-  local config = {
+  local config = vim.tbl_extend("keep", {
     type = 'python',
     request = 'launch',
     code = code,
     console = opts.console,
     env = vim.fn.environ(),
-  }
-  load_dap().run(vim.tbl_extend('force', config, opts.config or {}))
+  }, M.opts.test_runner_config);
+  config = vim.tbl_extend('force', config, opts.config or {})
+  for k, v in pairs(config) do
+    v_out = v
+    if type(v) == 'table' then v_out = type(v) end
+    print('"' .. k .. '"=' .. v_out)
+  end
+  load_dap().run(config)
 end
 
 ---@class PathMapping
