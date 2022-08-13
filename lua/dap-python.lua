@@ -69,6 +69,8 @@ local function tprint(tbl, indent)
     if type(v) == "table" then
       print(formatting)
       tprint(v, indent + 1)
+    elseif type(v) == "boolean" then
+      if v then print(formatting .. "true") else print(formatting .. "false") end
     else
       print(formatting .. v)
     end
