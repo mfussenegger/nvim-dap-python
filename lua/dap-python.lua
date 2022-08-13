@@ -46,7 +46,6 @@ local enrich_config = function(config, on_config)
   on_config(config)
 end
 
-
 local default_setup_opts = {
   console = 'integratedTerminal',
   include_configs = true,
@@ -63,13 +62,13 @@ local function load_dap()
 end
 
 --@private
-local function tprint (tbl, indent)
+local function tprint(tbl, indent)
   if not indent then indent = 0 end
   for k, v in pairs(tbl) do
     formatting = string.rep("  ", indent) .. k .. ": "
     if type(v) == "table" then
       print(formatting)
-      tprint(v, indent+1)
+      tprint(v, indent + 1)
     else
       print(formatting .. v)
     end
@@ -77,9 +76,9 @@ local function tprint (tbl, indent)
 end
 
 --@private
-local function M.load_opts(opts)
+local function load_opts(opts)
   result = vim.tbl_extend('keep', opts or {}, default_setup_opts);
-  tprint(tbl)
+  tprint(result)
   return result
 end
 
@@ -113,7 +112,7 @@ end
 function M.setup(adapter_python_path, opts)
   local dap = load_dap()
   adapter_python_path = adapter_python_path and vim.fn.expand(vim.fn.trim(adapter_python_path)) or 'python3'
-  M.opts = M.load_opts(opts)
+  M.opts = load_opts(opts)
   dap.adapters.python = function(cb, config)
     if config.request == 'attach' then
       local port = (config.connect or config).port
@@ -244,7 +243,7 @@ end
 
 ---@param opts DebugOpts
 local function trigger_test(classname, methodname, opts)
-  local test_runner = opts.test_runner 
+  local test_runner = opts.test_runner
   local runner = M.test_runners[test_runner]
   if not runner then
     vim.notify('Test runner `' .. test_runner .. '` not supported', vim.log.levels.WARN)
@@ -289,7 +288,7 @@ end
 --- Run test class above cursor
 ---@param opts DebugOpts See |DebugOpts|
 function M.test_class(opts)
-  opts = M.load_opts(opts)
+  opts = load_opts(opts)
   local class_node = closest_above_cursor(get_class_nodes())
   if not class_node then
     print('No suitable test class found')
@@ -302,7 +301,7 @@ end
 --- Run the test method above cursor
 ---@param opts DebugOpts See |DebugOpts|
 function M.test_method(opts)
-  opts = M.load_opts(opts)
+  opts = load_opts(opts)
   local function_node = closest_above_cursor(get_function_nodes())
   if not function_node then
     print('No suitable test method found')
@@ -335,7 +334,7 @@ end
 --- Debug the selected code
 ---@param opts DebugOpts
 function M.debug_selection(opts)
-  opts = M.load_opts(opts)
+  opts = load_opts(opts)
   local start_row, _ = unpack(api.nvim_buf_get_mark(0, '<'))
   local end_row, _ = unpack(api.nvim_buf_get_mark(0, '>'))
   local lines = api.nvim_buf_get_lines(0, start_row - 1, end_row, false)
