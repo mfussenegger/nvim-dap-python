@@ -9,7 +9,8 @@ local M = {}
 --- require('dap-python').test_runner = "pytest"
 --- ```
 ---@type string name of the test runner
-M.test_runner = 'unittest'
+M.test_runner = 'pytest'
+M.test_runner_launch = 0
 
 --- Table to register test runners.
 --- Built-in are test runners for unittest, pytest and django.
@@ -23,7 +24,7 @@ local function prune_nil(items)
 end
 
 local is_windows = function()
-    return vim.loop.os_uname().sysname:find("Windows", 1, true) and true
+  return vim.loop.os_uname().sysname:find("Windows", 1, true) and true
 end
 
 
@@ -31,7 +32,7 @@ local get_python_path = function()
   local venv_path = os.getenv('VIRTUAL_ENV')
   if venv_path then
     if is_windows() then
-        return venv_path .. '\\Scripts\\python.exe'
+      return venv_path .. '\\Scripts\\python.exe'
     end
     return venv_path .. '/bin/python'
   end
@@ -64,34 +65,30 @@ local function load_dap()
   return dap
 end
 
-
 ---@private
 function M.test_runners.unittest(classname, methodname)
   local path = vim.fn.expand('%:.:r:gs?/?.?')
-  local test_path = table.concat(prune_nil({path, classname, methodname}), '.')
-  local args = {'-v', test_path}
+  local test_path = table.concat(prune_nil({ path, classname, methodname }), '.')
+  local args = { '-v', test_path }
   return 'unittest', args
 end
-
 
 ---@private
 function M.test_runners.pytest(classname, methodname)
   local path = vim.fn.expand('%:p')
-  local test_path = table.concat(prune_nil({path, classname, methodname}), '::')
+  local test_path = table.concat(prune_nil({ path, classname, methodname }), '::')
   -- -s "allow output to stdout of test"
-  local args = {'-s', test_path}
+  local args = { '-s', test_path }
   return 'pytest', args
 end
-
 
 ---@private
 function M.test_runners.django(classname, methodname)
   local path = vim.fn.expand('%:r:gs?/?.?')
-  local test_path = table.concat(prune_nil({path, classname, methodname}), '.')
-  local args = {'test', test_path}
+  local test_path = table.concat(prune_nil({ path, classname, methodname }), '.')
+  local args = { 'test', test_path }
   return 'django', args
 end
-
 
 --- Register the python debug adapter
 ---@param adapter_python_path string|nil Path to the python interpreter. Path must be absolute or in $PATH and needs to have the debugpy package installed. Default is `python3`
@@ -132,6 +129,7 @@ function M.setup(adapter_python_path, opts)
       request = 'launch';
       name = 'Launch file';
       program = '${file}';
+      env = vim.fn.environ();
       console = opts.console;
       pythonPath = opts.pythonPath,
     })
@@ -144,6 +142,7 @@ function M.setup(adapter_python_path, opts)
         local args_string = vim.fn.input('Arguments: ')
         return vim.split(args_string, " +")
       end;
+      env = vim.fn.environ();
       console = opts.console;
       pythonPath = opts.pythonPath,
     })
@@ -151,6 +150,7 @@ function M.setup(adapter_python_path, opts)
       type = 'python';
       request = 'attach';
       name = 'Attach remote';
+      env = vim.fn.environ(),
       connect = function()
         local host = vim.fn.input('Host [127.0.0.1]: ')
         host = host ~= '' and host or '127.0.0.1'
@@ -160,7 +160,6 @@ function M.setup(adapter_python_path, opts)
     })
   end
 end
-
 
 local function get_nodes(query_text, predicate)
   local end_row = api.nvim_win_get_cursor(0)[1]
@@ -179,7 +178,6 @@ local function get_nodes(query_text, predicate)
   return nodes
 end
 
-
 local function get_function_nodes()
   local query_text = [[
     (function_definition
@@ -190,7 +188,6 @@ local function get_function_nodes()
   end)
 end
 
-
 local function get_class_nodes()
   local query_text = [[
     (class_definition
@@ -200,7 +197,6 @@ local function get_class_nodes()
     return node:type() == 'identifier'
   end)
 end
-
 
 local function get_node_text(node)
   local row1, col1, row2, col2 = node:range()
@@ -213,7 +209,6 @@ local function get_node_text(node)
   end
   return table.concat(lines, '\n')
 end
-
 
 local function get_parent_classname(node)
   local parent = node:parent()
@@ -230,7 +225,6 @@ local function get_parent_classname(node)
   end
 end
 
-
 ---@param opts DebugOpts
 local function trigger_test(classname, methodname, opts)
   local test_runner = opts.test_runner or M.test_runner
@@ -241,17 +235,17 @@ local function trigger_test(classname, methodname, opts)
   end
   assert(type(runner) == "function", "Test runner must be a function")
   local module, args = runner(classname, methodname)
-  local config = {
-    name = table.concat(prune_nil({classname, methodname}), '.'),
+  local config = dap.configuration.python[M.test_runner_launch] or {
+    name = table.concat(prune_nil({ classname, methodname }), '.'),
     type = 'python',
     request = 'launch',
-    module = module,
     args = args,
+    env = vim.fn.environ(),
     console = opts.console
   }
+  config.module = module
   load_dap().run(vim.tbl_extend('force', config, opts.config or {}))
 end
-
 
 local function closest_above_cursor(nodes)
   local result
@@ -269,7 +263,6 @@ local function closest_above_cursor(nodes)
   return result
 end
 
-
 --- Run test class above cursor
 ---@param opts DebugOpts See |DebugOpts|
 function M.test_class(opts)
@@ -282,7 +275,6 @@ function M.test_class(opts)
   local class = get_node_text(class_node)
   trigger_test(class, nil, opts)
 end
-
 
 --- Run the test method above cursor
 ---@param opts DebugOpts See |DebugOpts|
@@ -297,7 +289,6 @@ function M.test_method(opts)
   local function_name = get_node_text(function_node)
   trigger_test(class, function_name, opts)
 end
-
 
 --- Strips extra whitespace at the start of the lines
 --
@@ -318,7 +309,6 @@ local function remove_indent(lines)
   end
 end
 
-
 --- Debug the selected code
 ---@param opts DebugOpts
 function M.debug_selection(opts)
@@ -335,8 +325,6 @@ function M.debug_selection(opts)
   }
   load_dap().run(vim.tbl_extend('force', config, opts.config or {}))
 end
-
-
 
 ---@class PathMapping
 ---@field localRoot string
