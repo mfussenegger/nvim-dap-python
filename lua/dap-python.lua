@@ -56,15 +56,20 @@ local default_setup_opts = {
   test_runner_config = {},
 }
 
-local default_test_opts = {
-  console = 'integratedTerminal'
-}
-
-
 local function load_dap()
   local ok, dap = pcall(require, 'dap')
   assert(ok, 'nvim-dap is required to use dap-python')
   return dap
+end
+
+--@private
+local function M.load_opts(opts)
+  if next(M.opts) then
+    result = vim.tbl_extend('keep', opts or {}, M.opts);
+  else
+    result = vim.tbl_extend('keep', opts or {}, default_setup_opts);
+  end
+  return result
 end
 
 ---@private
@@ -98,8 +103,7 @@ end
 function M.setup(adapter_python_path, opts)
   local dap = load_dap()
   adapter_python_path = adapter_python_path and vim.fn.expand(vim.fn.trim(adapter_python_path)) or 'python3'
-  opts = vim.tbl_extend('keep', opts or {}, default_setup_opts)
-  M.opts = opts
+  M.opts = M.load_opts(opts)
   dap.adapters.python = function(cb, config)
     if config.request == 'attach' then
       local port = (config.connect or config).port
@@ -125,16 +129,16 @@ function M.setup(adapter_python_path, opts)
     end
   end
 
-  if opts.include_configs then
+  if M.opts.include_configs then
     dap.configurations.python = dap.configurations.python or {}
     table.insert(dap.configurations.python, {
       type = 'python';
       request = 'launch';
       name = 'Launch file';
       program = '${file}';
-      env = vim.fn.environ();
-      console = opts.console;
-      pythonPath = opts.pythonPath,
+      env = vim.env;
+      console = M.opts.console;
+      pythonPath = M.opts.pythonPath,
     })
     table.insert(dap.configurations.python, {
       type = 'python';
@@ -145,15 +149,15 @@ function M.setup(adapter_python_path, opts)
         local args_string = vim.fn.input('Arguments: ')
         return vim.split(args_string, " +")
       end;
-      env = vim.fn.environ();
-      console = opts.console;
-      pythonPath = opts.pythonPath,
+      env = vim.env;
+      console = M.opts.console;
+      pythonPath = M.opts.pythonPath,
     })
     table.insert(dap.configurations.python, {
       type = 'python';
       request = 'attach';
       name = 'Attach remote';
-      env = vim.fn.environ(),
+      env = vim.env,
       connect = function()
         local host = vim.fn.input('Host [127.0.0.1]: ')
         host = host ~= '' and host or '127.0.0.1'
@@ -228,29 +232,9 @@ local function get_parent_classname(node)
   end
 end
 
-local function deepcopy(o, seen)
-  seen = seen or {}
-  if o == nil then return nil end
-  if seen[o] then return seen[o] end
-
-  local no
-  if type(o) == 'table' then
-    no = {}
-    seen[o] = no
-
-    for k, v in next, o, nil do
-      no[deepcopy(k, seen)] = deepcopy(v, seen)
-    end
-    setmetatable(no, deepcopy(getmetatable(o), seen))
-  else -- number, string, boolean, etc
-    no = o
-  end
-  return no
-end
-
 ---@param opts DebugOpts
 local function trigger_test(classname, methodname, opts)
-  local test_runner = opts.test_runner or M.test_runner
+  local test_runner = opts.test_runner 
   local runner = M.test_runners[test_runner]
   if not runner then
     vim.notify('Test runner `' .. test_runner .. '` not supported', vim.log.levels.WARN)
@@ -263,10 +247,10 @@ local function trigger_test(classname, methodname, opts)
     request = 'launch',
     name = table.concat(prune_nil({ classname, methodname }), '.'),
     args = args,
-    console = opts.console,
-    env = vim.fn.environ(),
+    console = opts.console or M.opts.console,
+    env = vim.env,
     module = module,
-  }, M.opts.test_runner_config);
+  }, opts.test_runner_config);
   config = vim.tbl_extend('force', config, opts.config or {})
   for k, v in pairs(config) do
     v_out = v
@@ -295,7 +279,7 @@ end
 --- Run test class above cursor
 ---@param opts DebugOpts See |DebugOpts|
 function M.test_class(opts)
-  opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
+  opts = M.load_opts(opts)
   local class_node = closest_above_cursor(get_class_nodes())
   if not class_node then
     print('No suitable test class found')
@@ -308,7 +292,7 @@ end
 --- Run the test method above cursor
 ---@param opts DebugOpts See |DebugOpts|
 function M.test_method(opts)
-  opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
+  opts = M.load_opts(opts)
   local function_node = closest_above_cursor(get_function_nodes())
   if not function_node then
     print('No suitable test method found')
@@ -341,8 +325,7 @@ end
 --- Debug the selected code
 ---@param opts DebugOpts
 function M.debug_selection(opts)
-  opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
-  M.opts = opts
+  opts = M.load_opts(opts)
   local start_row, _ = unpack(api.nvim_buf_get_mark(0, '<'))
   local end_row, _ = unpack(api.nvim_buf_get_mark(0, '>'))
   local lines = api.nvim_buf_get_lines(0, start_row - 1, end_row, false)
@@ -352,8 +335,8 @@ function M.debug_selection(opts)
     request = 'launch',
     code = code,
     console = opts.console,
-    env = vim.fn.environ(),
-  }, M.opts.test_runner_config);
+    env = vim.env,
+  }, opts.test_runner_config);
   config = vim.tbl_extend('force', config, opts.config or {})
   for k, v in pairs(config) do
     v_out = v
