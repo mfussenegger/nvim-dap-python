@@ -28,7 +28,7 @@ end
 
 
 local get_python_path = function()
-  local venv_path = os.getenv('VIRTUAL_ENV')
+  local venv_path = os.getenv('VIRTUAL_ENV') or os.getenv('CONDA_PREFIX')
   if venv_path then
     if is_windows() then
         return venv_path .. '\\Scripts\\python.exe'
