@@ -126,8 +126,9 @@ function M.setup(adapter_python_path, opts)
   end
 
   if opts.include_configs then
-    dap.configurations.python = dap.configurations.python or {}
-    table.insert(dap.configurations.python, {
+    local configs = dap.configurations.python or {}
+    dap.configurations.python = configs
+    table.insert(configs, {
       type = 'python';
       request = 'launch';
       name = 'Launch file';
@@ -135,7 +136,7 @@ function M.setup(adapter_python_path, opts)
       console = opts.console;
       pythonPath = opts.pythonPath,
     })
-    table.insert(dap.configurations.python, {
+    table.insert(configs, {
       type = 'python';
       request = 'launch';
       name = 'Launch file with arguments';
@@ -147,7 +148,7 @@ function M.setup(adapter_python_path, opts)
       console = opts.console;
       pythonPath = opts.pythonPath,
     })
-    table.insert(dap.configurations.python, {
+    table.insert(configs, {
       type = 'python';
       request = 'attach';
       name = 'Attach remote';
@@ -157,6 +158,16 @@ function M.setup(adapter_python_path, opts)
         local port = tonumber(vim.fn.input('Port [5678]: ')) or 5678
         return { host = host, port = port }
       end;
+    })
+    table.insert(configs, {
+      type = 'python',
+      request = 'launch',
+      name = 'Run doctests in file',
+      module = 'doctest',
+      args = { "${file}" },
+      noDebug = true,
+      console = opts.console,
+      pythonPath = opts.pythonPath,
     })
   end
 end
