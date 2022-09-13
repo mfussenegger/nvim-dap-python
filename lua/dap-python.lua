@@ -3,19 +3,31 @@
 local api = vim.api
 local M = {}
 
---- Test runner to use by default. Default is "unittest". See |dap-python.test_runners|
+--- Test runner to use by default.
+--- The default value is dynamic and depends on `pytest.ini` or `manage.py` markers.
+--- If neither is found "unittest" is used. See |dap-python.test_runners|
 --- Override this to set a different runner:
 --- ```
 --- require('dap-python').test_runner = "pytest"
 --- ```
----@type string name of the test runner
-M.test_runner = 'unittest'
+---@type (string|fun():string) name of the test runner
+M.test_runner = nil
+
+local function default_runner()
+  if vim.loop.fs_stat('pytest.ini') then
+    return 'pytest'
+  elseif vim.loop.fs_stat('manage.py') then
+    return 'django'
+  else
+    return 'unittest'
+  end
+end
 
 --- Table to register test runners.
 --- Built-in are test runners for unittest, pytest and django.
 --- The key is the test runner name, the value a function to generate the
---- module name to run and its arguments. See |TestRunner|
----@type table<string, TestRunner>
+--- module name to run and its arguments. See |dap-python.TestRunner|
+---@type table<string,TestRunner>
 M.test_runners = {}
 
 local function prune_nil(items)
@@ -95,7 +107,7 @@ end
 
 --- Register the python debug adapter
 ---@param adapter_python_path string|nil Path to the python interpreter. Path must be absolute or in $PATH and needs to have the debugpy package installed. Default is `python3`
----@param opts SetupOpts|nil See |SetupOpts|
+---@param opts SetupOpts|nil See |dap-python.SetupOpts|
 function M.setup(adapter_python_path, opts)
   local dap = load_dap()
   adapter_python_path = adapter_python_path and vim.fn.expand(vim.fn.trim(adapter_python_path)) or 'python3'
@@ -244,7 +256,10 @@ end
 
 ---@param opts DebugOpts
 local function trigger_test(classname, methodname, opts)
-  local test_runner = opts.test_runner or M.test_runner
+  local test_runner = opts.test_runner or (M.test_runner or default_runner)
+  if type(test_runner) == "function" then
+    test_runner = test_runner()
+  end
   local runner = M.test_runners[test_runner]
   if not runner then
     vim.notify('Test runner `' .. test_runner .. '` not supported', vim.log.levels.WARN)
@@ -282,7 +297,7 @@ end
 
 
 --- Run test class above cursor
----@param opts DebugOpts See |DebugOpts|
+---@param opts DebugOpts See |dap-python.DebugOpts|
 function M.test_class(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
   local class_node = closest_above_cursor(get_class_nodes())
@@ -296,7 +311,7 @@ end
 
 
 --- Run the test method above cursor
----@param opts DebugOpts See |DebugOpts|
+---@param opts DebugOpts See |dap-python.DebugOpts|
 function M.test_method(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
   local function_node = closest_above_cursor(get_function_nodes())
@@ -371,20 +386,20 @@ end
 ---@field code string|nil Code to execute in string form
 ---@field python string[]|nil Path to python executable and interpreter arguments
 ---@field args string[]|nil Command line arguments passed to the program
----@field console DebugpyConsole See |DebugpyConsole|
+---@field console DebugpyConsole See |dap-python.DebugpyConsole|
 ---@field cwd string|nil Absolute path to the working directory of the program being debugged.
 ---@field env table|nil Environment variables defined as key value pair
 ---@field stopOnEntry boolean|nil Stop at first line of user code.
 
 
 ---@class DebugOpts
----@field console DebugpyConsole See |DebugpyConsole|
+---@field console DebugpyConsole See |dap-python.DebugpyConsole|
 ---@field test_runner "unittest"|"pytest"|"django"|string name of the test runner. Default is |dap-python.test_runner|
 ---@field config DebugpyConfig Overrides for the configuration
 
 ---@class SetupOpts
 ---@field include_configs boolean Add default configurations
----@field console DebugpyConsole See |DebugpyConsole|
+---@field console DebugpyConsole See |dap-python.DebugpyConsole|
 ---@field pythonPath string|nil Path to python interpreter. Uses interpreter from `VIRTUAL_ENV` environment variable or `adapter_python_path` by default
 
 
