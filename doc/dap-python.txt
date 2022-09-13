@@ -2,64 +2,66 @@
 Python extension for nvim-dap                                       *dap-python*
 
 M.test_runner                                           *dap-python.test_runner*
-     Test runner to use by default. Default is "unittest". See |dappy.test_runners|
+     Test runner to use by default.
+     The default value is dynamic and depends on `pytest.ini` or `manage.py` markers.
+     If neither is found "unittest" is used. See |dap-python.test_runners|
      Override this to set a different runner:
      ```
      require('dap-python').test_runner = "pytest"
      ```
 
     Type: ~
-        (string)  name of the test runner
+        ((string|fun():string))  name of the test runner
 
 
 M.test_runners                                         *dap-python.test_runners*
      Table to register test runners.
      Built-in are test runners for unittest, pytest and django.
      The key is the test runner name, the value a function to generate the
-     module name to run and its arguments. See |TestRunner|
+     module name to run and its arguments. See |dap-python.TestRunner|
 
     Type: ~
-        (table)  <string, TestRunner>
+        (table<string,TestRunner>)
 
 
 M.setup({adapter_python_path}, {opts})                        *dap-python.setup*
      Register the python debug adapter
 
     Parameters: ~
-        {adapter_python_path}  (string|nil)  Path to the python interpreter. Path must be absolute or in $PATH and needs to have the debugpy package installed. Default is `python3`
-        {opts}                 (SetupOpts)   See |SetupOpts|
+        {adapter_python_path}  (string|nil)     Path to the python interpreter. Path must be absolute or in $PATH and needs to have the debugpy package installed. Default is `python3`
+        {opts}                 (SetupOpts|nil)  See |dap-python.SetupOpts|
 
 
 M.test_class({opts})                                     *dap-python.test_class*
      Run test class above cursor
 
     Parameters: ~
-        {opts}  (DebugOpts)  See |DebugOpts|
+        {opts}  (DebugOpts)  See |dap-python.DebugOpts|
 
 
 M.test_method({opts})                                   *dap-python.test_method*
      Run the test method above cursor
 
     Parameters: ~
-        {opts}  (DebugOpts)  See |DebugOpts|
+        {opts}  (DebugOpts)  See |dap-python.DebugOpts|
 
 
 M.debug_selection({opts})                           *dap-python.debug_selection*
      Debug the selected code
 
     Parameters: ~
-        {opts}  (DebugOpts)  
+        {opts}  (DebugOpts)
 
 
-PathMapping                                                        *PathMapping*
+PathMapping                                             *dap-python.PathMapping*
 
 
     Fields: ~
-        {localRoot}   (string)  
-        {remoteRoot}  (string)  
+        {localRoot}   (string)
+        {remoteRoot}  (string)
 
 
-DebugpyConfig                                                    *DebugpyConfig*
+DebugpyConfig                                         *dap-python.DebugpyConfig*
 
 
     Fields: ~
@@ -74,7 +76,7 @@ DebugpyConfig                                                    *DebugpyConfig*
         {sudo}             (boolean|nil)        Run program under elevated permissions. Default is `false`
 
 
-DebugpyLaunchConfig                                        *DebugpyLaunchConfig*
+DebugpyLaunchConfig                             *dap-python.DebugpyLaunchConfig*
     : DebugpyConfig
 
     Fields: ~
@@ -83,27 +85,27 @@ DebugpyLaunchConfig                                        *DebugpyLaunchConfig*
         {code}         (string|nil)      Code to execute in string form
         {python}       (string[]|nil)    Path to python executable and interpreter arguments
         {args}         (string[]|nil)    Command line arguments passed to the program
-        {console}      (DebugpyConsole)  See |DebugpyConsole|
+        {console}      (DebugpyConsole)  See |dap-python.DebugpyConsole|
         {cwd}          (string|nil)      Absolute path to the working directory of the program being debugged.
         {env}          (table|nil)       Environment variables defined as key value pair
         {stopOnEntry}  (boolean|nil)     Stop at first line of user code.
 
 
-DebugOpts                                                            *DebugOpts*
+DebugOpts                                                 *dap-python.DebugOpts*
 
 
     Fields: ~
-        {console}      (DebugpyConsole)                       See |DebugpyConsole|
-        {test_runner}  ("unittest"|"pytest"|"django"|string)  name of the test runner. Default is |dappy.test_runner|
+        {console}      (DebugpyConsole)                       See |dap-python.DebugpyConsole|
+        {test_runner}  ("unittest"|"pytest"|"django"|string)  name of the test runner. Default is |dap-python.test_runner|
         {config}       (DebugpyConfig)                        Overrides for the configuration
 
 
-SetupOpts                                                            *SetupOpts*
+SetupOpts                                                 *dap-python.SetupOpts*
 
 
     Fields: ~
         {include_configs}  (boolean)         Add default configurations
-        {console}          (DebugpyConsole)  See |DebugpyConsole|
+        {console}          (DebugpyConsole)  See |dap-python.DebugpyConsole|
         {pythonPath}       (string|nil)      Path to python interpreter. Uses interpreter from `VIRTUAL_ENV` environment variable or `adapter_python_path` by default
 
 
