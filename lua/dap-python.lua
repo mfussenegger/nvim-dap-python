@@ -33,6 +33,9 @@ local get_python_path = function()
     if is_windows() then
         return venv_path .. '\\Scripts\\python.exe'
     end
+    if os.getenv('CONDA_PREFIX') then
+      return venv_path
+    end
     return venv_path .. '/bin/python'
   end
   return nil
