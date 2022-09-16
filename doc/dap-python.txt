@@ -11,6 +11,16 @@ M.test_runner                                           *dap-python.test_runner*
     Type: ~
         (string)  name of the test runner
 
+M.args                                                 *dap-python.args*
+     Test runner args to use by default. Default is {}. See |dappy.args|
+     Override this to set different runner args:
+     ```
+     require('dap-python').args = {"-v"}
+     ```
+
+    Type: ~
+        (table)  <str1, str2, ..., strN>
+
 
 M.test_runners                                         *dap-python.test_runners*
      Table to register test runners.

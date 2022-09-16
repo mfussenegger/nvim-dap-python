@@ -11,6 +11,14 @@ local M = {}
 ---@type string name of the test runner
 M.test_runner = 'unittest'
 
+--- Extra args to pass to test runner. Default is "{}". See |dap-python.args|
+--- Override this to set an arg:
+--- ```
+--- require('dap-python').args = {"-v"}
+--- ```
+---@type list of args to pass to the test runner
+M.args = {}
+
 --- Table to register test runners.
 --- Built-in are test runners for unittest, pytest and django.
 --- The key is the test runner name, the value a function to generate the
@@ -252,6 +260,9 @@ local function trigger_test(classname, methodname, opts)
   end
   assert(type(runner) == "function", "Test runner must be a function")
   local module, args = runner(classname, methodname)
+  for _,v in ipairs(M.args) do
+   table.insert(args, v)
+  end
   local config = {
     name = table.concat(prune_nil({classname, methodname}), '.'),
     type = 'python',
