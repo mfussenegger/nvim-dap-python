@@ -127,6 +127,22 @@ An alternative is to use project specific `.vscode/launch.json` files, see `:hel
 The [Debugpy Wiki][debugpy_wiki] contains a list of all supported configuration options.
 
 
+## Python dependencies and virtualenv
+
+`nvim-dap-python` by default looks for `VIRTUAL_ENV` and `CONDA_PREFIX`
+environment variables and if present uses these environments to execute your
+application or tests.
+
+If you're using another way to manage virtual environments, you can set a
+custom `resolve_python` function:
+
+```lua
+require('dap-python').resolve_python = function()
+  return '/absolute/path/to/python'
+end
+```
+
+
 ## Alternatives
 
 ### [vim-ultest](https://github.com/rcarriga/vim-ultest)

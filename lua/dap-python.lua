@@ -13,6 +13,14 @@ local M = {}
 ---@type (string|fun():string) name of the test runner
 M.test_runner = nil
 
+
+--- Function to resolve path to python to use for program or test execution.
+--- By default the `VIRTUAL_ENV` and `CONDA_PREFIX` environment variables are
+--- used if present.
+---@type nil|fun():nil|string name of the test runner
+M.resolve_python = nil
+
+
 local function default_runner()
   if vim.loop.fs_stat('pytest.ini') then
     return 'pytest'
@@ -46,6 +54,10 @@ local get_python_path = function()
         return venv_path .. '\\Scripts\\python.exe'
     end
     return venv_path .. '/bin/python'
+  end
+  if M.resolve_python then
+    assert(type(M.resolve_python) == "function", "resolve_python must be a function")
+    return M.resolve_python()
   end
   return nil
 end
@@ -403,7 +415,7 @@ end
 ---@field pythonPath string|nil Path to python interpreter. Uses interpreter from `VIRTUAL_ENV` environment variable or `adapter_python_path` by default
 
 
----@alias TestRunner fun(classname: string, methodname: string): string module, string[] args
+---@alias TestRunner fun(classname: string, methodname: string):(string module, string[] args)
 
 ---@alias DebugpyConsole "internalConsole"|"integratedTerminal"|"externalTerminal"|nil
 
