@@ -312,7 +312,7 @@ end
 
 
 --- Run test class above cursor
----@param opts DebugOpts See |dap-python.DebugOpts|
+---@param opts? DebugOpts See |dap-python.DebugOpts|
 function M.test_class(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
   local class_node = closest_above_cursor(get_class_nodes())
@@ -326,7 +326,7 @@ end
 
 
 --- Run the test method above cursor
----@param opts DebugOpts See |dap-python.DebugOpts|
+---@param opts? DebugOpts See |dap-python.DebugOpts|
 function M.test_method(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
   local function_node = closest_above_cursor(get_function_nodes())
