@@ -46,22 +46,39 @@ local is_windows = function()
     return vim.loop.os_uname().sysname:find("Windows", 1, true) and true
 end
 
-
-local get_python_path = function()
-  local venv_path = os.getenv('VIRTUAL_ENV') or os.getenv('CONDA_PREFIX')
-  if venv_path then
+local get_python_path_for_virtual_env= function (venv_path)
     if is_windows() then
         return venv_path .. '\\Scripts\\python.exe'
     end
     return venv_path .. '/bin/python'
-  end
-  if M.resolve_python then
-    assert(type(M.resolve_python) == "function", "resolve_python must be a function")
-    return M.resolve_python()
-  end
-  return nil
 end
 
+local get_python_path_for_conda_env= function (venv_path)
+    if is_windows() then
+        return venv_path .. '\\python.exe'
+    end
+    return venv_path .. '/bin/python'
+end
+
+local get_python_path = function()
+
+    if M.resolve_python then
+        assert(type(M.resolve_python) == "function", "resolve_python must be a function")
+        return M.resolve_python()
+    end
+
+    local venv_path = os.getenv('VIRTUAL_ENV')
+    if venv_path then
+        return get_python_path_for_virtual_env(venv_path)
+    end
+
+    venv_path = os.getenv('CONDA_PREFIX')
+    if venv_path then
+        return get_python_path_for_conda_env(venv_path)
+    end
+
+    return nil
+end
 
 local enrich_config = function(config, on_config)
   if not config.pythonPath and not config.python then
