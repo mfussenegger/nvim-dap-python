@@ -48,13 +48,22 @@ end
 
 
 local get_python_path = function()
-  local venv_path = os.getenv('VIRTUAL_ENV') or os.getenv('CONDA_PREFIX')
+  local venv_path = os.getenv('VIRTUAL_ENV')
   if venv_path then
     if is_windows() then
-        return venv_path .. '\\Scripts\\python.exe'
+      return venv_path .. '\\Scripts\\python.exe'
     end
     return venv_path .. '/bin/python'
   end
+
+  venv_path = os.getenv("CONDA_PREFIX")
+  if venv_path then
+    if is_windows() then
+      return venv_path .. '\\python.exe'
+    end
+    return venv_path .. '/bin/python'
+  end
+
   if M.resolve_python then
     assert(type(M.resolve_python) == "function", "resolve_python must be a function")
     return M.resolve_python()
