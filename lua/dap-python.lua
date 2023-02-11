@@ -62,11 +62,6 @@ end
 
 local get_python_path = function()
 
-    if M.resolve_python then
-        assert(type(M.resolve_python) == "function", "resolve_python must be a function")
-        return M.resolve_python()
-    end
-
     local venv_path = os.getenv('VIRTUAL_ENV')
     if venv_path then
         return get_python_path_for_virtual_env(venv_path)
@@ -75,6 +70,11 @@ local get_python_path = function()
     venv_path = os.getenv('CONDA_PREFIX')
     if venv_path then
         return get_python_path_for_conda_env(venv_path)
+    end
+
+    if M.resolve_python then
+        assert(type(M.resolve_python) == "function", "resolve_python must be a function")
+        return M.resolve_python()
     end
 
     return nil
