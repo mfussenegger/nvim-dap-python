@@ -135,12 +135,15 @@ function M.setup(adapter_python_path, opts)
   opts = vim.tbl_extend('keep', opts or {}, default_setup_opts)
   dap.adapters.python = function(cb, config)
     if config.request == 'attach' then
+      ---@diagnostic disable-next-line: undefined-field
       local port = (config.connect or config).port
+      ---@diagnostic disable-next-line: undefined-field
+      local host = (config.connect or config).host or '127.0.0.1'
       cb({
-        type = 'server';
-        port = assert(port, '`connect.port` is required for a python `attach` configuration');
-        host = (config.connect or config).host or '127.0.0.1';
-        enrich_config = enrich_config;
+        type = 'server',
+        port = assert(port, '`connect.port` is required for a python `attach` configuration'),
+        host = host,
+        enrich_config = enrich_config,
         options = {
           source_filetype = 'python',
         }
@@ -424,7 +427,7 @@ end
 ---@field pythonPath string|nil Path to python interpreter. Uses interpreter from `VIRTUAL_ENV` environment variable or `adapter_python_path` by default
 
 
----@alias TestRunner fun(classname: string, methodname: string):(string module, string[] args)
+---@alias TestRunner fun(classname: string, methodname: string):string, string[]
 
 ---@alias DebugpyConsole "internalConsole"|"integratedTerminal"|"externalTerminal"|nil
 
