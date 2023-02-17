@@ -67,9 +67,6 @@ local enrich_config = function(config, on_config)
   if not config.pythonPath and not config.python then
     config.pythonPath = get_python_path()
   end
-  if config.subProcess == nil then
-    config.subProcess = false
-  end
   on_config(config)
 end
 
