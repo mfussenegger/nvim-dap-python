@@ -18,7 +18,7 @@ tree sitter parser for Python.
 
 ### Debugpy
 
-It is recommended to install debugpy into a dedicated virtualenv. To do so:
+It is recommended to install debugpy into a dedicated virtualenv. To do so install via [`mason.nvim`](https://github.com/williamboman/mason.nvim) or:
 
 ```bash
 mkdir .virtualenvs
@@ -48,6 +48,10 @@ Install either:
 
 ```vimL
 lua require('dap-python').setup('~/.virtualenvs/debugpy/bin/python')
+```
+or if installed via `mason.nvim`:
+```vimL
+lua require('dap-python').setup(vim.fn.stdpath("data") .. "/mason/packages/debugpy/venv/bin/python")
 ```
 
 The argument to `setup` is the path to the python installation which contains the `debugpy` module.
