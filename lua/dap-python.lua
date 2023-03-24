@@ -213,7 +213,10 @@ local function get_nodes(query_text, predicate)
   local end_row = api.nvim_win_get_cursor(0)[1]
   local ft = api.nvim_buf_get_option(0, 'filetype')
   assert(ft == 'python', 'test_method of dap-python only works for python files, not ' .. ft)
-  local query = vim.treesitter.parse_query(ft, query_text)
+  local query = (vim.treesitter.query.parse
+    and vim.treesitter.query.parse(ft, query_text)
+    or vim.treesitter.parse_query(ft, query_text)
+  )
   assert(query, 'Could not parse treesitter query. Cannot find test')
   local parser = vim.treesitter.get_parser(0)
   local root = (parser:parse()[1]):root()
