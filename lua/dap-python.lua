@@ -100,7 +100,12 @@ end
 
 ---@private
 function M.test_runners.unittest(classname, methodname)
-  local path = vim.fn.expand('%:.:r:gs?/?.?')
+  local path
+  if is_windows() then
+    path = vim.fn.expand('%:.:r:gs?\\?.?')
+  else
+    path = vim.fn.expand('%:.:r:gs?/?.?')
+  end
   local test_path = table.concat(prune_nil({path, classname, methodname}), '.')
   local args = {'-v', test_path}
   return 'unittest', args
