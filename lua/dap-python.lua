@@ -98,14 +98,17 @@ local function load_dap()
 end
 
 
+local function get_module_path()
+  if is_windows() then
+    return vim.fn.expand('%:.:r:gs?\\?.?')
+  else
+    return vim.fn.expand('%:.:r:gs?/?.?')
+  end
+end
+
 ---@private
 function M.test_runners.unittest(classname, methodname)
-  local path
-  if is_windows() then
-    path = vim.fn.expand('%:.:r:gs?\\?.?')
-  else
-    path = vim.fn.expand('%:.:r:gs?/?.?')
-  end
+  local path = get_module_path()
   local test_path = table.concat(prune_nil({path, classname, methodname}), '.')
   local args = {'-v', test_path}
   return 'unittest', args
@@ -124,7 +127,7 @@ end
 
 ---@private
 function M.test_runners.django(classname, methodname)
-  local path = vim.fn.expand('%:r:gs?/?.?')
+  local path = get_module_path()
   local test_path = table.concat(prune_nil({path, classname, methodname}), '.')
   local args = {'test', test_path}
   return 'django', args
