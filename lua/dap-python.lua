@@ -381,7 +381,7 @@ end
 
 
 --- Debug the selected code
----@param opts DebugOpts
+---@param opts? DebugOpts
 function M.debug_selection(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
   local start_row, _ = unpack(api.nvim_buf_get_mark(0, '<'))
