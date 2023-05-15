@@ -11,7 +11,7 @@ An extension for [nvim-dap][1] providing default configurations for python and m
 - Install like any other neovim plugin:
   - If using [vim-plug][6]: `Plug 'mfussenegger/nvim-dap-python'`
   - If using [packer.nvim][7]: `use 'mfussenegger/nvim-dap-python'`
-  - If using [packer.nvim][8]: `'mfussenegger/nvim-dap-python'`
+  - If using [lazy.nvim][8]: `'mfussenegger/nvim-dap-python'`
 
 If you want to use the test runner functionality, it additionally requires a
 tree sitter parser for Python.
