@@ -139,7 +139,7 @@ end
 ---@param opts SetupOpts|nil See |dap-python.SetupOpts|
 function M.setup(adapter_python_path, opts)
   local dap = load_dap()
-  adapter_python_path = adapter_python_path and vim.fn.expand(vim.fn.trim(adapter_python_path)) or 'python3'
+  adapter_python_path = adapter_python_path and vim.fn.expand(vim.fn.trim(adapter_python_path), true) or 'python3'
   opts = vim.tbl_extend('keep', opts or {}, default_setup_opts)
   dap.adapters.python = function(cb, config)
     if config.request == 'attach' then
