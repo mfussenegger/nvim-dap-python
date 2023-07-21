@@ -64,17 +64,42 @@ local get_python_path = function()
     return venv_path .. '/bin/python'
   end
 
-  if M.resolve_python then
-    assert(type(M.resolve_python) == "function", "resolve_python must be a function")
-    return M.resolve_python()
-  end
   return nil
 end
 
 
+local check_python_path = function (pypath)
+  assert(type(pypath) == "string", "resolve_python must return a string")
+
+  if pypath:sub(1, 1) == "~" then
+    local homeDir = os.getenv("HOME")
+    pypath = homeDir .. pypath:sub(2)
+  end
+
+  local f = io.open(pypath, "r")
+  if f then
+    io.close(f)
+    return true
+  end
+  vim.notify('[nvim-dap-python]: Not a valid python path "' .. pypath ..
+    '" defined in `resolve_position`, fallback to using built-in Python environment discover mechanism!',
+    vim.log.levels.warn
+  )
+  return false
+end
+
 local enrich_config = function(config, on_config)
   if not config.pythonPath and not config.python then
-    config.pythonPath = get_python_path()
+    local pypath
+    if M.resolve_python then
+      assert(type(M.resolve_python) == "function", "resolve_python must be a function")
+      pypath = M.resolve_python()
+    end
+    if check_python_path(pypath) then
+      config.pythonPath = pypath
+    else
+      config.pythonPath = get_python_path()
+    end
   end
   on_config(config)
 end
