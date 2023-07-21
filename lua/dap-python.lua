@@ -71,11 +71,6 @@ end
 local check_python_path = function (pypath)
   assert(type(pypath) == "string", "resolve_python must return a string")
 
-  if pypath:sub(1, 1) == "~" then
-    local homeDir = os.getenv("HOME")
-    pypath = homeDir .. pypath:sub(2)
-  end
-
   local f = io.open(pypath, "r")
   if f then
     io.close(f)
