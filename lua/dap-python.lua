@@ -43,7 +43,7 @@ local function prune_nil(items)
 end
 
 local is_windows = function()
-    return vim.loop.os_uname().sysname:find("Windows", 1, true) and true
+  return vim.fn.has("win32") == 1
 end
 
 
