@@ -2,6 +2,7 @@
 
 local api = vim.api
 local M = {}
+local uv = vim.uv or vim.loop
 
 --- Test runner to use by default.
 --- The default value is dynamic and depends on `pytest.ini` or `manage.py` markers.
@@ -22,9 +23,9 @@ M.resolve_python = nil
 
 
 local function default_runner()
-  if vim.loop.fs_stat('pytest.ini') then
+  if uv.fs_stat('pytest.ini') then
     return 'pytest'
-  elseif vim.loop.fs_stat('manage.py') then
+  elseif uv.fs_stat('manage.py') then
     return 'django'
   else
     return 'unittest'
@@ -47,13 +48,41 @@ local is_windows = function()
 end
 
 
+---@param venv string
+---@return string
+local function python_exe(venv)
+  if is_windows() then
+    return venv .. '\\Scripts\\python.exe'
+  end
+  return venv .. '/bin/python'
+end
+
+
+local function roots()
+  return coroutine.wrap(function()
+    local cwd = vim.fn.getcwd()
+    coroutine.yield(cwd)
+
+    local wincwd = vim.fn.getcwd(0)
+    if wincwd ~= cwd then
+      coroutine.yield(wincwd)
+    end
+
+    ---@diagnostic disable-next-line: deprecated
+    local get_clients = vim.lsp.get_clients or vim.lsp.get_active_clients
+    for _, client in ipairs(get_clients()) do
+      if client.config.root_dir then
+        coroutine.yield(client.config.root_dir)
+      end
+    end
+  end)
+end
+
+
 local get_python_path = function()
   local venv_path = os.getenv('VIRTUAL_ENV')
   if venv_path then
-    if is_windows() then
-      return venv_path .. '\\Scripts\\python.exe'
-    end
-    return venv_path .. '/bin/python'
+    return python_exe(venv_path)
   end
 
   venv_path = os.getenv("CONDA_PREFIX")
@@ -68,6 +97,17 @@ local get_python_path = function()
     assert(type(M.resolve_python) == "function", "resolve_python must be a function")
     return M.resolve_python()
   end
+
+  for root in roots() do
+    for _, folder in ipairs({"venv", ".venv", "env", ".env"}) do
+      local path = root .. "/" .. folder
+      local stat = uv.fs_stat(path)
+      if stat then
+        return python_exe(path)
+      end
+    end
+  end
+
   return nil
 end
 
