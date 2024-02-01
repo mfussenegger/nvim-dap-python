@@ -102,7 +102,7 @@ local get_python_path = function()
     for _, folder in ipairs({"venv", ".venv", "env", ".env"}) do
       local path = root .. "/" .. folder
       local stat = uv.fs_stat(path)
-      if stat then
+      if stat and stat.type == "directory" then
         return python_exe(path)
       end
     end
