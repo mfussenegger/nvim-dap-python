@@ -208,6 +208,7 @@ function M.setup(adapter_python_path, opts)
       })
     end
   end
+  dap.adapters.debugpy = dap.adapters.python
 
   if opts.include_configs then
     local configs = dap.configurations.python or {}
