@@ -18,17 +18,23 @@ tree sitter parser for Python.
 
 ### Debugpy
 
-It is recommended to install debugpy into a dedicated virtualenv. To do so:
+It is recommended to install debugpy into a dedicated virtualenv.
 
-```bash
-mkdir .virtualenvs
-cd .virtualenvs
-python -m venv debugpy
-debugpy/bin/python -m pip install debugpy
-```
+You can do so:
 
-The debugger will automatically pick-up another virtual environment if it is
-activated before neovim is started.
+1. Manually, for example with:
+
+    ```bash
+    mkdir .virtualenvs
+    cd .virtualenvs
+    python -m venv debugpy
+    debugpy/bin/python -m pip install debugpy
+    ```
+
+    The debugger will automatically pick-up another virtual environment if it is
+    activated before neovim is started.
+
+2. By installing it with [mason.nvim](https://github.com/williamboman/mason.nvim).
 
 
 ### Tree-sitter
@@ -51,6 +57,8 @@ lua require('dap-python').setup('~/.virtualenvs/debugpy/bin/python')
 ```
 
 The argument to `setup` is the path to the python installation which contains the `debugpy` module.
+
+If you installed it with mason, that path probably is `~/.local/share/nvim/mason/packages/debugpy/venv/bin/python`.
 
 
 2. Use nvim-dap as usual.
