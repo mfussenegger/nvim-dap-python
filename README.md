@@ -27,6 +27,11 @@ python -m venv debugpy
 debugpy/bin/python -m pip install debugpy
 ```
 
+If you are using [mason.nvim](https://github.com/williamboman/mason.nvim) to 
+install `debugpy` with `:MasonInstall debugpy`  you already have a virtualenv 
+at under `vim.fn.stdpath('data')` at `mason/packages/debugpy/venv/bin/python` 
+that you can use.
+
 The debugger will automatically pick-up another virtual environment if it is
 activated before neovim is started.
 
@@ -49,6 +54,14 @@ Install either:
 ```vimL
 lua require('dap-python').setup('~/.virtualenvs/debugpy/bin/python')
 ```
+
+if you have `debugpy` installed through [mason.nvim](https://github.com/williamboman/mason.nvim) 
+(`:MasonInstall debugpy`)  then:
+
+```vimL
+lua require('dap-python').setup(table.concat({ vim.fn.stdpath('data'),  'mason', 'packages', 'debugpy', 'venv', 'bin', 'python'}, '/'):gsub('//+', '/'))
+```
+
 
 The argument to `setup` is the path to the python installation which contains the `debugpy` module.
 
