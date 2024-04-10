@@ -129,9 +129,13 @@ The [Debugpy Wiki][debugpy_wiki] contains a list of all supported configuration 
 
 ## Python dependencies and virtualenv
 
-`nvim-dap-python` by default looks for `VIRTUAL_ENV` and `CONDA_PREFIX`
-environment variables and if present uses these environments to execute your
-application or tests.
+`nvim-dap-python` by default tries to detect a virtual environment and uses it
+when debugging your application. It looks for:
+
+- The environment variables `VIRTUAL_ENV` and `CONDA_PREFIX`
+- The folders `venv`, `.venv`, `env`, `.env` relative to either the current
+  working directory or the `root_dir` of a active language server client. See
+  `:h lsp.txt` for more information about the latter.
 
 If you're using another way to manage virtual environments, you can set a
 custom `resolve_python` function:
@@ -141,6 +145,10 @@ require('dap-python').resolve_python = function()
   return '/absolute/path/to/python'
 end
 ```
+
+Or explicitly set the `pythonPath` property within your debugpy/nvim-dap
+configurations. See `:h dap-configuration` and [Launch/Attach
+Settings][debugpy_wiki]
 
 
 ## Alternatives
