@@ -15,7 +15,7 @@ describe('dap with debugpy', function()
   end)
 
   it('Can start session and break at breakpoint', function()
-    local program = vim.fn.expand('%:p:h') .. '/tests/simple.py'
+    local program = vim.fn.expand('%:p:h') .. '/spec/simple.py'
     local config = {
       type = 'python',
       request = 'launch',
