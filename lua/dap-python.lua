@@ -146,17 +146,11 @@ end
 
 ---@return string[]
 local function flatten(...)
-  local argc = select("#", ...)
-  local result = {}
-  for i = 1, argc do
-    local arg = select(i, ...)
-    if type(arg) == "table" then
-      vim.list_extend(result, arg)
-    else
-      table.insert(result, arg)
-    end
+  local values = {...}
+  if vim.iter then
+    return vim.iter(values):flatten(2):totable()
   end
-  return result
+  return vim.tbl_flatten(values)
 end
 
 
