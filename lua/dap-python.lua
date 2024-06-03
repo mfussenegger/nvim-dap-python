@@ -27,6 +27,17 @@ local function default_runner()
     return 'pytest'
   elseif uv.fs_stat('manage.py') then
     return 'django'
+  elseif uv.fs_stat("pyproject.toml") then
+    local f = io.open("pyproject.toml")
+    if f then
+      for line in f:lines() do
+        if line:find("%[tool.pytest") then
+          f:close()
+          return "pytest"
+        end
+      end
+      f:close()
+    end
   else
     return 'unittest'
   end
