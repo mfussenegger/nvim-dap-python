@@ -18,7 +18,8 @@ tree sitter parser for Python.
 
 ### Debugpy
 
-It is recommended to install debugpy into a dedicated virtualenv. To do so:
+You need to install `debugpy` using either your package manager or via `pip`.
+For example:
 
 ```bash
 mkdir .virtualenvs
@@ -27,13 +28,19 @@ python -m venv debugpy
 debugpy/bin/python -m pip install debugpy
 ```
 
-The debugger will automatically pick-up another virtual environment if it is
-activated before neovim is started.
-
+If you're using virtual environments for your project it will automatically get
+picked up if it is active before `nvim` starts, or if it is in a default
+location. See [Python dependencies and
+virtualenv](#python-dependencies-and-virtualenv)
 
 ### Tree-sitter
 
-Install either:
+If you're using a properly packaged `nvim` version 0.10+, a python tree-sitter
+parser should be included and you're all set.
+
+If you're using an older version, or your distribution excluded the parser you
+can install it manually using either:
+
 
 - Via `:TSInstall python` of [nvim-treesitter][4]
 - Compile the parser from [tree-sitter-python][5] and copy it into `.config/nvim/parser/`:
@@ -44,47 +51,63 @@ Install either:
 
 ## Usage
 
-1. Call `setup` in your `init.vim` to register the adapter and configurations:
+1. Call `setup` in your `init.lua` to register the adapter and configurations.
 
-```vimL
-lua require('dap-python').setup('~/.virtualenvs/debugpy/bin/python')
-```
+   If installed in a virtual environment:
 
-The argument to `setup` is the path to the python installation which contains the `debugpy` module.
+   ```lua
+   require("dap-python").setup("/path/to/venv/bin/python")
+   -- If using the above, then `/path/to/venv/bin/python -m debugpy --version`
+   -- must work in the shell
+   ```
+
+   Or if installed globally:
+
+   ```lua
+   require("dap-python").setup("python")
+   -- If using the above, then `python -m debugpy --version`
+   -- must work in the shell
+   ```
 
 
-2. Use nvim-dap as usual.
+2. Use `nvim-dap` as usual.
 
-- Call `:lua require('dap').continue()` to start debugging.
-- See `:help dap-mappings` and `:help dap-api`.
-- Use `:lua require('dap-python').test_method()` to debug the closest method above the cursor.
+   - Call `:lua require('dap').continue()` to start debugging.
+   - See `:help dap-mappings` and `:help dap-api`.
+   - Use `:lua require('dap-python').test_method()` to debug the closest method above the cursor.
 
-Supported test frameworks are `unittest`, `pytest` and `django`. By default it
-tries to detect the runner by probing for `pytest.ini` and `manage.py`, if
-neither are present it defaults to `unittest`.
+   Supported test frameworks are `unittest`, `pytest` and `django`. By default it
+   tries to detect the runner by probing for `pytest.ini` and `manage.py`, if
+   neither are present it defaults to `unittest`.
 
-To configure a different runner, change the `test_runner` variable. For example
-to configure `pytest` set the test runner like this in `vimL`:
+   To configure a different runner, change the `test_runner` variable. For
+   example, to configure `pytest` set the test runner like this in your
+   `init.lua`:
 
-```vimL
-lua require('dap-python').test_runner = 'pytest'
-```
+   ```lua
+   require('dap-python').test_runner = 'pytest'
+   ```
 
-You can also add custom runners. An example in `Lua`:
+   You can also add custom runners. An example in `Lua`:
 
-```lua
-local test_runners = require('dap-python').test_runners
+   ```lua
+   local test_runners = require('dap-python').test_runners
 
--- `test_runners` is a table. The keys are the runner names like `unittest` or `pytest`.
--- The value is a function that takes three arguments:
--- The classname, a methodname and the opts
--- (The `opts` are coming passed through from either `test_method` or `test_class`)
--- The function must return a module name and the arguments passed to the module as list.
-test_runners.your_runner = function(classname, methodname, opts)
-  local args = {classname, methodname}
-  return 'modulename', args
-end
-```
+   -- `test_runners` is a table. The keys are the runner names like `unittest` or `pytest`.
+   -- The value is a function that takes two arguments:
+   -- The classnames and a methodname
+   -- The function must return a module name and the arguments passed to the module as list.
+
+   ---@param classnames string[]
+   ---@param methodname string?
+   test_runners.your_runner = function(classnames, methodname)
+     local path = table.concat({
+        table.concat(classnames, ":"),
+        methodname,
+     }, "::")
+     return 'modulename', {"-s", path}
+   end
+   ```
 
 
 ### Documentation
@@ -104,12 +127,18 @@ vnoremap <silent> <leader>ds <ESC>:lua require('dap-python').debug_selection()<C
 
 ## Custom configuration
 
-If you call the `require('dap-python').setup` method it will create a few `nvim-dap` configuration entries. These configurations are general purpose configurations suitable for many use cases, but you may need to customize the configurations - for example if you want to use Docker containers.
+If you call the `require('dap-python').setup` method it will create a few
+`nvim-dap` configuration entries. These configurations are general purpose
+configurations suitable for many use cases, but you may need to customize the
+configurations - for example if you want to use Docker containers.
 
-To add your own entries, you can extend the `dap.configurations.python` list after calling the `setup` function:
+To add your own entries you can create per project `.vscode/launch.json`
+configuration files. See `:help dap-launch.json`.
 
-```vimL
-lua << EOF
+Or you can add your own global entries by extending the
+`dap.configurations.python` list after calling the `setup` function:
+
+```lua
 require('dap-python').setup('/path/to/python')
 table.insert(require('dap').configurations.python, {
   type = 'python',
@@ -118,11 +147,7 @@ table.insert(require('dap').configurations.python, {
   program = '${file}',
   -- ... more options, see https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings
 })
-EOF
 ```
-
-An alternative is to use project specific `.vscode/launch.json` files, see `:help dap-launch.json`.
-
 
 The [Debugpy Wiki][debugpy_wiki] contains a list of all supported configuration options.
 
