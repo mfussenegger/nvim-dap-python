@@ -351,8 +351,12 @@ function M._get_nodes(source, subject, end_row)
     local parent = result
     while parent ~= nil do
       if parent:type() == "function_definition" then
-        local ident = parent:child(1)
-        assert(ident:type() == "identifier")
+        local ident
+        if parent:child(1):type() == "identifier" then
+          ident = parent:child(1)
+        elseif parent:child(2) and parent:child(2):type() == "identifier" then
+          ident = parent:child(2)
+        end
         result = ident
       end
       parent = parent:parent()
