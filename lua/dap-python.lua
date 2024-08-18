@@ -38,6 +38,7 @@ local function default_runner()
       end
       f:close()
     end
+    return 'unittest'
   else
     return 'unittest'
   end
