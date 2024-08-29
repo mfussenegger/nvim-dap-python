@@ -77,8 +77,9 @@ can install it manually using either:
    - Use `:lua require('dap-python').test_method()` to debug the closest method above the cursor.
 
    Supported test frameworks are `unittest`, `pytest` and `django`. By default it
-   tries to detect the runner by probing for `pytest.ini` and `manage.py`, if
-   neither are present it defaults to `unittest`.
+   tries to detect the runner by probing for presence of `pytest.ini` or
+   `manage.py`, or for a `tool.pytest` directive inside `pyproject.toml`, if
+   none are present it defaults to `unittest`.
 
    To configure a different runner, change the `test_runner` variable. For
    example, to configure `pytest` set the test runner like this in your

@@ -3,8 +3,8 @@ Python extension for nvim-dap                                       *dap-python*
 
 M.test_runner                                           *dap-python.test_runner*
      Test runner to use by default.
-     The default value is dynamic and depends on `pytest.ini` or `manage.py` markers.
-     If neither is found "unittest" is used. See |dap-python.test_runners|
+     The default value is dynamic and depends on `pytest.ini`, `manage.py` or `pyproject.toml` markers.
+     If none are found "unittest" is used. See |dap-python.test_runners|
      Override this to set a different runner:
      ```
      require('dap-python').test_runner = "pytest"
