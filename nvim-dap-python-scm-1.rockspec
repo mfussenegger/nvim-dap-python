@@ -23,6 +23,7 @@ dependencies = {
 
 test_dependencies = {
   "nlua",
+  "tree-sitter-python"
 }
 
 source = {
