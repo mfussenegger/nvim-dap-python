@@ -25,6 +25,11 @@ jobs:
           neovim: true
           version: ${{ matrix.neovim_version }}
 
+      - name: Install treesitter
+        uses: tree-sitter/setup-action@v1
+        with:
+          install-lib: false
+
       - name: Install Lua
         uses: leso-kn/gh-actions-lua@master
         with:
@@ -34,6 +39,15 @@ jobs:
         uses: hishamhm/gh-actions-luarocks@master
         with:
           luarocksVersion: "3.11.0"
+
+      - name: Install tree-sitter-python
+        run: |
+          luarocks install tree-sitter-python --local
+
+      - name: Copy python.so
+        run: |
+          mkdir -p ~/.config/nvim/parser
+          find ~/.luarocks -name python.so -exec cp {} ~/.config/nvim/parser/python.so \;
 
       - name: Run tests
         run: |
