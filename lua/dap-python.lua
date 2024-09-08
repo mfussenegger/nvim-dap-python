@@ -22,28 +22,6 @@ M.test_runner = nil
 M.resolve_python = nil
 
 
-local function default_runner()
-  if uv.fs_stat('pytest.ini') then
-    return 'pytest'
-  elseif uv.fs_stat('manage.py') then
-    return 'django'
-  elseif uv.fs_stat("pyproject.toml") then
-    local f = io.open("pyproject.toml")
-    if f then
-      for line in f:lines() do
-        if line:find("%[tool.pytest") then
-          f:close()
-          return "pytest"
-        end
-      end
-      f:close()
-    end
-    return 'unittest'
-  else
-    return 'unittest'
-  end
-end
-
 --- Table to register test runners.
 --- Built-in are test runners for unittest, pytest and django.
 --- The key is the test runner name, the value a function to generate the
@@ -85,6 +63,30 @@ local function roots()
       end
     end
   end)
+end
+
+
+local function default_runner()
+  for root in roots() do
+    if uv.fs_stat(root .. "/pytest.ini") then
+      return "pytest"
+    elseif uv.fs_stat(root .. "/manage.py") then
+      return "django"
+    elseif uv.fs_stat(root .. "/pyproject.toml") then
+      local f = io.open(root .. "/pyproject.toml")
+      if f then
+        for line in f:lines() do
+          if line:find("%[tool.pytest") then
+            f:close()
+            return "pytest"
+          end
+        end
+        f:close()
+      end
+    end
+  end
+
+  return "unittest"
 end
 
 
