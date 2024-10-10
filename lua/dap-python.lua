@@ -451,7 +451,7 @@ end
 function M.test_method(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
   local functions = M._get_nodes(0, "function")
-  if not functions then
+  if not functions or not functions[1] then
     print('No test method found near cursor')
     return
   end
