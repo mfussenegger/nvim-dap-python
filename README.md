@@ -64,8 +64,8 @@ can install it manually using either:
    Or if installed globally:
 
    ```lua
-   require("dap-python").setup("python")
-   -- If using the above, then `python -m debugpy --version`
+   require("dap-python").setup("python3")
+   -- If using the above, then `python3 -m debugpy --version`
    -- must work in the shell
    ```
 
