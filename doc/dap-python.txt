@@ -123,7 +123,7 @@ TestRunner                                                          *TestRunner*
         fun(classname:
 
 
-DebugpyConsole                                                  *DebugpyConsole*
+DebugpyConsole                                                  *dap-python.DebugpyConsole*
 
 
     Type: ~
