@@ -245,6 +245,7 @@ function M.setup(adapter_python_path, opts)
       request = 'launch';
       name = 'Launch file';
       program = '${file}';
+      cwd = vim.fn.getcwd();
       console = opts.console;
       pythonPath = opts.pythonPath,
     })
@@ -253,6 +254,7 @@ function M.setup(adapter_python_path, opts)
       request = 'launch';
       name = 'Launch file with arguments';
       program = '${file}';
+      cwd = vim.fn.getcwd();
       args = function()
         local args_string = vim.fn.input('Arguments: ')
         return vim.split(args_string, " +")
@@ -277,6 +279,7 @@ function M.setup(adapter_python_path, opts)
       name = 'Run doctests in file',
       module = 'doctest',
       args = { "${file}" },
+      cwd = vim.fn.getcwd();
       noDebug = true,
       console = opts.console,
       pythonPath = opts.pythonPath,
