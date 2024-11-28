@@ -237,6 +237,11 @@ function M.setup(adapter_python_path, opts)
   end
   dap.adapters.debugpy = dap.adapters.python
 
+  -- nvim-dap logs warnings for unhandled custom events
+  -- Mute it
+  dap.listeners.before["event_debugpySockets"]["dap-python"] = function()
+  end
+
   if opts.include_configs then
     local configs = dap.configurations.python or {}
     dap.configurations.python = configs
