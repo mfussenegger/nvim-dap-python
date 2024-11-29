@@ -248,7 +248,7 @@ function M.setup(adapter_python_path, opts)
     table.insert(configs, {
       type = 'python';
       request = 'launch';
-      name = 'Launch file';
+      name = 'file';
       program = '${file}';
       console = opts.console;
       pythonPath = opts.pythonPath,
@@ -256,7 +256,7 @@ function M.setup(adapter_python_path, opts)
     table.insert(configs, {
       type = 'python';
       request = 'launch';
-      name = 'Launch file with arguments';
+      name = 'file:args';
       program = '${file}';
       args = function()
         local args_string = vim.fn.input('Arguments: ')
@@ -268,7 +268,7 @@ function M.setup(adapter_python_path, opts)
     table.insert(configs, {
       type = 'python';
       request = 'attach';
-      name = 'Attach remote';
+      name = 'attach';
       connect = function()
         local host = vim.fn.input('Host [127.0.0.1]: ')
         host = host ~= '' and host or '127.0.0.1'
@@ -279,7 +279,7 @@ function M.setup(adapter_python_path, opts)
     table.insert(configs, {
       type = 'python',
       request = 'launch',
-      name = 'Run doctests in file',
+      name = 'file:doctest',
       module = 'doctest',
       args = { "${file}" },
       noDebug = true,
