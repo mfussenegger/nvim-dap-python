@@ -50,14 +50,9 @@ See [Usage](#usage): You need to use `require("dap-python").setup("uv")`
 
 ### Tree-sitter
 
-If you're using a properly packaged `nvim` version 0.10+, a python tree-sitter
-parser should be included and you're all set.
+To install the python tree-sitter parser you can either:
 
-If you're using an older version, or your distribution excluded the parser you
-can install it manually using either:
-
-
-- Via `:TSInstall python` of [nvim-treesitter][4]
+- Use `:TSInstall python` from [nvim-treesitter][4]
 - Compile the parser from [tree-sitter-python][5] and copy it into `.config/nvim/parser/`:
   - `git clone https://github.com/tree-sitter/tree-sitter-python.git`
   - `cd tree-sitter-python`
