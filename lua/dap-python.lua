@@ -207,7 +207,9 @@ end
 
 
 --- Register the python debug adapter
----@param python_path string|nil Path to the python interpreter. Path must be absolute or in $PATH and needs to have the debugpy package installed. Default is `python3`
+---
+---@param python_path "python"|"python3"|"uv"|string|nil Path to python interpreter. Must be in $PATH or an absolute path and needs to have the debugpy package installed. Defaults to `python3`.
+--- If `uv` then debugpy is launched via `uv run`
 ---@param opts? dap-python.setup.opts See |dap-python.setup.opts|
 function M.setup(python_path, opts)
   local dap = load_dap()
@@ -219,7 +221,9 @@ function M.setup(python_path, opts)
       local port = (config.connect or config).port
       ---@diagnostic disable-next-line: undefined-field
       local host = (config.connect or config).host or '127.0.0.1'
-      cb({
+
+      ---@type dap.ServerAdapter
+      local adapter = {
         type = 'server',
         port = assert(port, '`connect.port` is required for a python `attach` configuration'),
         host = host,
@@ -227,17 +231,33 @@ function M.setup(python_path, opts)
         options = {
           source_filetype = 'python',
         }
-      })
+      }
+      cb(adapter)
     else
-      cb({
-        type = 'executable';
-        command = python_path;
-        args = { '-m', 'debugpy.adapter' };
-        enrich_config = enrich_config;
-        options = {
-          source_filetype = 'python',
+      ---@type dap.ExecutableAdapter
+      local adapter
+      if python_path == "uv" then
+        adapter = {
+          type = "executable",
+          command = "uv",
+          args = {"run", "--with", "debugpy", "python", "-m", "debugpy.adapter"},
+          enrich_config = enrich_config,
+          options = {
+            source_filetype = "python"
+          }
         }
-      })
+      else
+        adapter = {
+          type = "executable",
+          command = python_path,
+          args = {"-m", "debugpy.adapter"};
+          enrich_config = enrich_config,
+          options = {
+            source_filetype = "python"
+          }
+        }
+      end
+      cb(adapter)
     end
   end
   dap.adapters.debugpy = dap.adapters.python
