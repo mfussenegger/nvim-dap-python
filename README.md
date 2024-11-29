@@ -18,20 +18,35 @@ tree sitter parser for Python.
 
 ### Debugpy
 
-You need to install `debugpy` using either your package manager or via `pip`.
-For example:
+Options to install [debugpy][3]:
+
+1. Via a system package manager. For example:
 
 ```bash
-mkdir .virtualenvs
-cd .virtualenvs
+pacman -S python-debugpy
+```
+
+2. Via `pip` in a `venv`:
+
+```bash
+mkdir ~/.virtualenvs
+cd ~/.virtualenvs
 python -m venv debugpy
 debugpy/bin/python -m pip install debugpy
 ```
 
-If you're using virtual environments for your project it will automatically get
-picked up if it is active before `nvim` starts, or if it is in a default
-location. See [Python dependencies and
+Note that the virutalenv used for the `debugpy` can be independent from any
+virtualenv you're using in your projects.
+
+`nvim-dap-python` tries to detect your project `venv` and should recognize any
+dependencies your project has. See [Python dependencies and
 virtualenv](#python-dependencies-and-virtualenv)
+
+
+3. Implicit via [uv][uv]
+
+See [Usage](#usage): You need to use `require("dap-python").setup("uv")`
+
 
 ### Tree-sitter
 
@@ -61,12 +76,18 @@ can install it manually using either:
    -- must work in the shell
    ```
 
-   Or if installed globally:
+   If installed globally:
 
    ```lua
    require("dap-python").setup("python3")
    -- If using the above, then `python3 -m debugpy --version`
    -- must work in the shell
+   ```
+
+   If using [uv][uv]:
+
+   ```lua
+   require("dap-python").setup("uv")
    ```
 
 
@@ -201,3 +222,4 @@ vimcats -f -t lua/dap-python.lua > doc/dap-python.txt
 [7]: https://github.com/wbthomason/packer.nvim
 [debugpy_wiki]: https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings
 [vimcats]: https://github.com/mrcjkb/vimcats
+[uv]: https://docs.astral.sh/uv/
