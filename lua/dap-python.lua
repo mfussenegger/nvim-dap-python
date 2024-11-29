@@ -11,7 +11,7 @@ local uv = vim.uv or vim.loop
 --- ```
 --- require('dap-python').test_runner = "pytest"
 --- ```
----@type (string|fun():string) name of the test runner
+---@type string|fun():string name of the test runner
 M.test_runner = nil
 
 
@@ -26,7 +26,7 @@ M.resolve_python = nil
 --- Built-in are test runners for unittest, pytest and django.
 --- The key is the test runner name, the value a function to generate the
 --- module name to run and its arguments. See |dap-python.TestRunner|
----@type table<string, TestRunner>
+---@type table<string, dap-python.TestRunner>
 M.test_runners = {}
 
 
@@ -90,6 +90,7 @@ local function default_runner()
 end
 
 
+---@return string|nil
 local get_python_path = function()
   local venv_path = os.getenv('VIRTUAL_ENV')
   if venv_path then
@@ -123,8 +124,11 @@ local get_python_path = function()
 end
 
 
+---@param config dap-python.Config|dap-python.LaunchConfig
+---@param on_config fun(config: dap-python.Config)
 local enrich_config = function(config, on_config)
   if not config.pythonPath and not config.python then
+    ---@diagnostic disable-next-line: inject-field
     config.pythonPath = get_python_path()
   end
   on_config(config)
@@ -164,6 +168,7 @@ local function flatten(...)
   if vim.iter then
     return vim.iter(values):flatten(2):totable()
   end
+  ---@diagnostic disable-next-line: deprecated
   return vim.tbl_flatten(values)
 end
 
@@ -202,11 +207,11 @@ end
 
 
 --- Register the python debug adapter
----@param adapter_python_path string|nil Path to the python interpreter. Path must be absolute or in $PATH and needs to have the debugpy package installed. Default is `python3`
----@param opts SetupOpts|nil See |dap-python.SetupOpts|
-function M.setup(adapter_python_path, opts)
+---@param python_path string|nil Path to the python interpreter. Path must be absolute or in $PATH and needs to have the debugpy package installed. Default is `python3`
+---@param opts? dap-python.setup.opts See |dap-python.setup.opts|
+function M.setup(python_path, opts)
   local dap = load_dap()
-  adapter_python_path = adapter_python_path and vim.fn.expand(vim.fn.trim(adapter_python_path), true) or 'python3'
+  python_path = python_path and vim.fn.expand(vim.fn.trim(python_path), true) or 'python3'
   opts = vim.tbl_extend('keep', opts or {}, default_setup_opts)
   dap.adapters.python = function(cb, config)
     if config.request == 'attach' then
@@ -226,7 +231,7 @@ function M.setup(adapter_python_path, opts)
     else
       cb({
         type = 'executable';
-        command = adapter_python_path;
+        command = python_path;
         args = { '-m', 'debugpy.adapter' };
         enrich_config = enrich_config;
         options = {
@@ -317,6 +322,7 @@ local function reverse(list)
 end
 
 
+---@private
 ---@param source string|integer
 ---@param subject "function"|"class"
 ---@param end_row integer? defaults to cursor
@@ -392,7 +398,7 @@ end
 
 ---@param classnames string[]
 ---@param methodname string?
----@param opts DebugOpts
+---@param opts dap-python.debug_opts
 local function trigger_test(classnames, methodname, opts)
   local test_runner = opts.test_runner or (M.test_runner or default_runner)
   if type(test_runner) == "function" then
@@ -420,7 +426,7 @@ end
 
 
 --- Run test class above cursor
----@param opts? DebugOpts See |dap-python.DebugOpts|
+---@param opts? dap-python.debug_opts See |dap-python.debug_opts|
 function M.test_class(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
   local candidates = M._get_nodes(0, "class")
@@ -452,7 +458,7 @@ end
 
 
 --- Run the test method above cursor
----@param opts? DebugOpts See |dap-python.DebugOpts|
+---@param opts? dap-python.debug_opts See |dap-python.debug_opts|
 function M.test_method(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
   local functions = M._get_nodes(0, "function")
@@ -471,6 +477,8 @@ end
 --
 -- >>> remove_indent({'    print(10)', '    if True:', '        print(20)'})
 -- {'print(10)', 'if True:', '    print(20)'}
+---@param lines string[]
+---@return string[]
 local function remove_indent(lines)
   local offset = nil
   for _, line in ipairs(lines) do
@@ -489,7 +497,7 @@ end
 
 
 --- Debug the selected code
----@param opts? DebugOpts
+---@param opts? dap-python.debug_opts
 function M.debug_selection(opts)
   opts = vim.tbl_extend('keep', opts or {}, default_test_opts)
   local start_row, _ = unpack(api.nvim_buf_get_mark(0, '<'))
@@ -507,47 +515,52 @@ end
 
 
 
----@class PathMapping
+---@class dap-python.PathMapping
 ---@field localRoot string
 ---@field remoteRoot string
 
 
----@class DebugpyConfig
+---@class dap-python.Config
 ---@field django boolean|nil Enable django templates. Default is `false`
 ---@field gevent boolean|nil Enable debugging of gevent monkey-patched code. Default is `false`
 ---@field jinja boolean|nil Enable jinja2 template debugging. Default is `false`
 ---@field justMyCode boolean|nil Debug only user-written code. Default is `true`
----@field pathMappings PathMapping[]|nil Map of local and remote paths.
+---@field pathMappings dap-python.PathMapping[]|nil Map of local and remote paths.
 ---@field pyramid boolean|nil Enable debugging of pyramid applications
 ---@field redirectOutput boolean|nil Redirect output to debug console. Default is `false`
 ---@field showReturnValue boolean|nil Shows return value of function when stepping
 ---@field sudo boolean|nil Run program under elevated permissions. Default is `false`
 
----@class DebugpyLaunchConfig : DebugpyConfig
+
+---@class dap-python.LaunchConfig : dap-python.Config
 ---@field module string|nil Name of the module to debug
 ---@field program string|nil Absolute path to the program
 ---@field code string|nil Code to execute in string form
 ---@field python string[]|nil Path to python executable and interpreter arguments
 ---@field args string[]|nil Command line arguments passed to the program
----@field console DebugpyConsole See |dap-python.DebugpyConsole|
+---@field console dap-python.console See |dap-python.console|
 ---@field cwd string|nil Absolute path to the working directory of the program being debugged.
 ---@field env table|nil Environment variables defined as key value pair
 ---@field stopOnEntry boolean|nil Stop at first line of user code.
 
 
----@class DebugOpts
----@field console DebugpyConsole See |dap-python.DebugpyConsole|
----@field test_runner "unittest"|"pytest"|"django"|string name of the test runner. Default is |dap-python.test_runner|
----@field config DebugpyConfig Overrides for the configuration
+---@class dap-python.debug_opts
+---@field console? dap-python.console
+---@field test_runner? "unittest"|"pytest"|"django"|string name of the test runner
+---@field config? dap-python.Config Overrides for the configuration
 
----@class SetupOpts
----@field include_configs boolean Add default configurations
----@field console DebugpyConsole See |dap-python.DebugpyConsole|
----@field pythonPath string|nil Path to python interpreter. Uses interpreter from `VIRTUAL_ENV` environment variable or `adapter_python_path` by default
+---@class dap-python.setup.opts
+---@field include_configs? boolean Add default configurations
+---@field console? dap-python.console
+---
+--- Path to python interpreter. Uses interpreter from `VIRTUAL_ENV` environment
+--- variable or `python_path` by default
+---@field pythonPath? string
 
 
----@alias TestRunner fun(classname: string|string[], methodname: string?):string, string[]
+--- A function receiving classname and methodname; must return module to run and its arguments
+---@alias dap-python.TestRunner fun(classname: string|string[], methodname: string?):string, string[]
 
----@alias DebugpyConsole "internalConsole"|"integratedTerminal"|"externalTerminal"|nil
+---@alias dap-python.console 'internalConsole'|'integratedTerminal'|'externalTerminal'|nil
 
 return M

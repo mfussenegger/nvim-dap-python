@@ -184,6 +184,14 @@ Settings][debugpy_wiki]
 A test runner building upon vim-test with nvim-dap support.
 Aims to work for all python runners.
 
+## Development
+
+- Generate docs using [vimcats][vimcats]:
+
+```bash
+vimcats -f -t lua/dap-python.lua > doc/dap-python.txt
+```
+
 
 [1]: https://github.com/mfussenegger/nvim-dap
 [3]: https://github.com/microsoft/debugpy
@@ -192,3 +200,4 @@ Aims to work for all python runners.
 [6]: https://github.com/junegunn/vim-plug
 [7]: https://github.com/wbthomason/packer.nvim
 [debugpy_wiki]: https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings
+[vimcats]: https://github.com/mrcjkb/vimcats
