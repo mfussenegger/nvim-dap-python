@@ -110,6 +110,7 @@ dap-python.setup.opts                                    *dap-python.setup.opts*
     Fields: ~
         {include_configs?}  (boolean)             Add default configurations
         {console?}          (dap-python.console)
+        {cwd?}              (string|function|nil) Working directory for the debug session.
         {pythonPath?}       (string)
                                                    Path to python interpreter. Uses interpreter from `VIRTUAL_ENV` environment
                                                    variable or `python_path` by default
