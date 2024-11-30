@@ -138,6 +138,7 @@ end
 local default_setup_opts = {
   include_configs = true,
   console = 'integratedTerminal',
+  cwd = nil,
   pythonPath = nil,
 }
 
@@ -276,6 +277,7 @@ function M.setup(python_path, opts)
       name = 'file';
       program = '${file}';
       console = opts.console;
+      cwd = opts.cwd,
       pythonPath = opts.pythonPath,
     })
     table.insert(configs, {
@@ -292,6 +294,7 @@ function M.setup(python_path, opts)
         return vim.split(args_string, " +")
       end;
       console = opts.console;
+      cwd = opts.cwd,
       pythonPath = opts.pythonPath,
     })
     table.insert(configs, {
@@ -313,6 +316,7 @@ function M.setup(python_path, opts)
       args = { "${file}" },
       noDebug = true,
       console = opts.console,
+      cwd = opts.cwd,
       pythonPath = opts.pythonPath,
     })
   end
@@ -576,6 +580,7 @@ end
 ---@class dap-python.setup.opts
 ---@field include_configs? boolean Add default configurations
 ---@field console? dap-python.console
+---@field cwd? string|function|nil Working directory for the debug session. Default is `nil`
 ---
 --- Path to python interpreter. Uses interpreter from `VIRTUAL_ENV` environment
 --- variable or `python_path` by default
