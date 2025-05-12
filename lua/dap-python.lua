@@ -208,7 +208,7 @@ end
 
 --- Register the python debug adapter
 ---
----@param python_path "python"|"python3"|"uv"|string|nil Path to python interpreter. Must be in $PATH or an absolute path and needs to have the debugpy package installed. Defaults to `python3`.
+---@param python_path "python"|"python3"|"uv"|"debugpy-adapter"|string|nil Path to python interpreter. Must be in $PATH or an absolute path and needs to have the debugpy package installed. Defaults to `python3`.
 --- If `uv` then debugpy is launched via `uv run`
 ---@param opts? dap-python.setup.opts See |dap-python.setup.opts|
 function M.setup(python_path, opts)
@@ -236,11 +236,22 @@ function M.setup(python_path, opts)
     else
       ---@type dap.ExecutableAdapter
       local adapter
-      if python_path == "uv" then
+      local basename = vim.fn.fnamemodify(python_path, ":t")
+      if basename == "uv" then
         adapter = {
           type = "executable",
-          command = "uv",
+          command = python_path,
           args = {"run", "--with", "debugpy", "python", "-m", "debugpy.adapter"},
+          enrich_config = enrich_config,
+          options = {
+            source_filetype = "python"
+          }
+        }
+      elseif basename == "debugpy-adapter" then
+        adapter = {
+          type = "executable",
+          command = python_path,
+          args = {},
           enrich_config = enrich_config,
           options = {
             source_filetype = "python"
