@@ -79,6 +79,10 @@ To install the python tree-sitter parser you can either:
    -- must work in the shell
    ```
 
+   Newer versions of `debugpy` also include a `debugpy-adapter` executable
+   which you can use in place of the `python` executable.
+
+
    If using [uv][uv]:
 
    ```lua
