@@ -92,6 +92,12 @@ end
 
 ---@return string|nil
 local get_python_path = function()
+
+  if M.resolve_python then
+    assert(type(M.resolve_python) == "function", "resolve_python must be a function")
+    return M.resolve_python()
+  end
+
   local venv_path = os.getenv('VIRTUAL_ENV')
   if venv_path then
     return python_exe(venv_path)
@@ -103,11 +109,6 @@ local get_python_path = function()
       return venv_path .. '\\python.exe'
     end
     return venv_path .. '/bin/python'
-  end
-
-  if M.resolve_python then
-    assert(type(M.resolve_python) == "function", "resolve_python must be a function")
-    return M.resolve_python()
   end
 
   for root in roots() do
