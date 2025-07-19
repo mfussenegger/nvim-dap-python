@@ -1,5 +1,5 @@
+*dap-python*                                     Python extension for nvim-dap
 ==============================================================================
-Python extension for nvim-dap                                       *dap-python*
 
 M.test_runner                                           *dap-python.test_runner*
      Test runner to use by default.
