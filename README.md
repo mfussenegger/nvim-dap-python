@@ -148,25 +148,33 @@ vnoremap <silent> <leader>ds <ESC>:lua require('dap-python').debug_selection()<C
 
 ## Custom configuration
 
-If you call the `require('dap-python').setup` method it will create a few
-`nvim-dap` configuration entries. These configurations are general purpose
-configurations suitable for many use cases, but you may need to customize the
-configurations - for example if you want to use Docker containers.
+If you call the `require('dap-python').setup` method it will create a
+few `nvim-dap` configuration entries. These configurations are general
+purpose configurations suitable for many use cases, but you may need to
+add additional configurations or customize them.
 
-To add your own entries you can create per project `.vscode/launch.json`
-configuration files. See `:help dap-launch.json`.
+To add additional configurations you can create per project
+`.vscode/launch.json` configuration files. See `:help dap-launch.json`.
 
 Or you can add your own global entries by extending the
 `dap.configurations.python` list after calling the `setup` function:
 
 ```lua
-require('dap-python').setup('/path/to/python')
+require('dap-python').setup('debugpy-adapter') -- or uv, or path to python, see #usage
 table.insert(require('dap').configurations.python, {
   type = 'python',
   request = 'launch',
   name = 'My custom launch configuration',
+
+  -- `program` is what you'd use in `python <program>` in a shell
+  -- If you need to run the equivalent of `python -m <module>`, replace
+  -- `program = '${file}` entry with `module = "modulename"
   program = '${file}',
-  -- ... more options, see https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings
+
+  console = "integratedTerminal",
+
+  -- Other options:
+  -- See https://github.com/microsoft/debugpy/wiki/Debug-configuration-settings
 })
 ```
 
