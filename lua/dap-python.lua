@@ -456,7 +456,16 @@ local function trigger_test(classnames, methodname, opts)
     args = args,
     console = opts.console
   }
-  load_dap().run(vim.tbl_extend('force', config, opts.config or {}))
+  local opts_config = opts.config or {}
+  if type(opts_config) == "function" then
+    config = opts_config(config)
+  elseif type(opts_config) == "table" then
+    config = vim.tbl_extend("force", config, opts_config)
+  else
+    error("opts.config must be a table, got: " .. type(opts_config))
+  end
+  ---@cast config dap.Configuration
+  load_dap().run(config)
 end
 
 
@@ -582,7 +591,7 @@ end
 ---@class dap-python.debug_opts
 ---@field console? dap-python.console
 ---@field test_runner? "unittest"|"pytest"|"django"|string name of the test runner
----@field config? dap-python.Config Overrides for the configuration
+---@field config? dap-python.Config|fun(config:dap-python.Config):dap-python.Config Overrides for the configuration
 
 ---@class dap-python.setup.opts
 ---@field include_configs? boolean Add default configurations
