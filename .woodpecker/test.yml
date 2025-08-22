@@ -1,0 +1,20 @@
+---
+when:
+  - event: push
+    branch: main
+  - event: pull_request
+
+matrix:
+  nvim_version:
+    - latest
+    - 0.11
+
+steps:
+  - name: test
+    image: anatolelucet/neovim:${nvim_version}-alpine
+    commands:
+      - apk add python3 lua5.1 lua5.1-dev luarocks5.1 tree-sitter-python lua-busted
+      - eval $(luarocks-5.1 path --no-bin)
+      - mkdir -p ~/.config/nvim/parser
+      - cp /usr/lib/tree-sitter/python.so ~/.config/nvim/parser/python.so
+      - luarocks-5.1 test
