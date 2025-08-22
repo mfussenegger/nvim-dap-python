@@ -22,6 +22,10 @@ describe('dap with debugpy', function()
       name = 'Launch file',
       subProcess = false,
       program = program,
+      envFile = "${workspaceFolder}/spec/.env",
+      env = {
+        MERGED = "yes",
+      }
     }
     local win = api.nvim_get_current_win()
     local bufnr = vim.fn.bufadd(program)
@@ -34,6 +38,18 @@ describe('dap with debugpy', function()
       return (session and session.initialized or false)
     end)
     assert.are_not.same(nil, dap.session())
+    local expected = {
+      type = 'python',
+      request = 'launch',
+      name = 'Launch file',
+      subProcess = false,
+      program = program,
+      env = {
+        DUMMY = "foobar==",
+        MERGED = "yes",
+      }
+    }
+    assert.are.same(expected, dap.session().config)
   end)
 end)
 
