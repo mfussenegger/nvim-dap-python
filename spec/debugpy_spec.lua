@@ -47,6 +47,8 @@ describe('dap with debugpy', function()
       env = {
         DUMMY = "foobar==",
         MERGED = "yes",
+        X = "foo",
+        Y = "bar",
       }
     }
     assert.are.same(expected, dap.session().config)

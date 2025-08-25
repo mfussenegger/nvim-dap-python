@@ -133,8 +133,10 @@ local function parse_envfile(path)
   end
   local env = {}
   for line in f:lines() do
-    local key, value = line:match("([^=]+)=(.+)")
-    env[key] = value
+    local key, value = line:match("^([^=]+)=(.+)")
+    if key and value and key:sub(1, 1) ~= '#' then
+      env[key] = value:gsub("^'(.*)'$", "%1"):gsub('^"(.*)"$', "%1")
+    end
   end
   f:close()
   return env
