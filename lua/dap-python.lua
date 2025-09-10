@@ -153,7 +153,7 @@ local enrich_config = function(config, on_config)
   local envfile = vim.fn.fnamemodify(config.envFile or "./.env", ":p")
   config.envFile = nil
   local env = parse_envfile(envfile)
-  if env then
+  if env and next(env) then
     config.env = vim.tbl_deep_extend('force', config.env or {}, env)
   end
   on_config(config)
