@@ -131,7 +131,7 @@ local function parse_envfile(path)
   if not f then
     return nil
   end
-  local env = {}
+  local env = vim.empty_dict()
   for line in f:lines() do
     local key, value = line:match("^([^=]+)=(.+)")
     if key and value and key:sub(1, 1) ~= '#' then
@@ -154,7 +154,7 @@ local enrich_config = function(config, on_config)
   config.envFile = nil
   local env = parse_envfile(envfile)
   if env then
-    config.env = vim.tbl_deep_extend('force', config.env or {}, env)
+    config.env = vim.tbl_deep_extend('force', config.env or vim.empty_dict(), env)
   end
   on_config(config)
 end
