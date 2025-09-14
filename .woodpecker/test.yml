@@ -11,10 +11,9 @@ matrix:
 
 steps:
   - name: test
-    image: anatolelucet/neovim:${nvim_version}-alpine
+    image: codeberg.org/mfussenegger/nvimdev:${nvim_version}
     commands:
-      - apk add python3 lua5.1 lua5.1-dev luarocks5.1 tree-sitter-python lua-busted
-      - eval $(luarocks-5.1 path --no-bin)
+      - apk add python3 tree-sitter-python
       - mkdir -p ~/.config/nvim/parser
       - cp /usr/lib/tree-sitter/python.so ~/.config/nvim/parser/python.so
       - luarocks-5.1 test
