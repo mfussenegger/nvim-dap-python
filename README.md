@@ -221,7 +221,7 @@ vimcats -f -t lua/dap-python.lua > doc/dap-python.txt
 ```
 
 
-[1]: https://github.com/mfussenegger/nvim-dap
+[1]: https://codeberg.org/mfussenegger/nvim-dap
 [3]: https://github.com/microsoft/debugpy
 [4]: https://github.com/nvim-treesitter/nvim-treesitter
 [5]: https://github.com/tree-sitter/tree-sitter-python
