@@ -165,6 +165,23 @@ local enrich_config = function(config, on_config)
 end
 
 
+--- Forward adapter-level timeout/retry options from the chosen configuration
+--- onto the adapter this module builds, since `dap.adapters.python`/
+--- `.debugpy` construct a fresh adapter per-launch and would otherwise
+--- always use nvim-dap's hardcoded defaults regardless of what a specific
+--- configuration needs (e.g. a slow-to-attach remote debugpy).
+---@param adapter dap.Adapter
+---@param config dap-python.Config|dap-python.LaunchConfig
+local function forward_adapter_options(adapter, config)
+  adapter.options = adapter.options or {}
+  for _, key in ipairs({ 'initialize_timeout_sec', 'disconnect_timeout_sec', 'max_retries' }) do
+    if config[key] ~= nil then
+      adapter.options[key] = config[key]
+    end
+  end
+end
+
+
 local default_setup_opts = {
   include_configs = true,
   console = 'integratedTerminal',
@@ -262,6 +279,7 @@ function M.setup(python_path, opts)
           source_filetype = 'python',
         }
       }
+      forward_adapter_options(adapter, config)
       cb(adapter)
     else
       ---@type dap.ExecutableAdapter
@@ -298,6 +316,7 @@ function M.setup(python_path, opts)
           }
         }
       end
+      forward_adapter_options(adapter, config)
       cb(adapter)
     end
   end
@@ -595,10 +614,13 @@ end
 
 
 ---@class dap-python.Config
+---@field disconnect_timeout_sec number|nil Forwarded onto the adapter: seconds to wait for a disconnect response before warning and closing the connection. Default is `3`
 ---@field django boolean|nil Enable django templates. Default is `false`
 ---@field gevent boolean|nil Enable debugging of gevent monkey-patched code. Default is `false`
+---@field initialize_timeout_sec number|nil Forwarded onto the adapter: seconds to wait for the `initialize` response before warning that the debug adapter didn't respond. Default is `4`
 ---@field jinja boolean|nil Enable jinja2 template debugging. Default is `false`
 ---@field justMyCode boolean|nil Debug only user-written code. Default is `true`
+---@field max_retries number|nil Forwarded onto the adapter (attach/server configurations only): number of connection attempts, 250ms apart, before giving up. Default is `14`
 ---@field pathMappings dap-python.PathMapping[]|nil Map of local and remote paths.
 ---@field pyramid boolean|nil Enable debugging of pyramid applications
 ---@field redirectOutput boolean|nil Redirect output to debug console. Default is `false`

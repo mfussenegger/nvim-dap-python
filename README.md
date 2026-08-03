@@ -180,6 +180,26 @@ table.insert(require('dap').configurations.python, {
 
 The [Debugpy Wiki][debugpy_wiki] contains a list of all supported configuration options.
 
+A configuration entry can also carry `initialize_timeout_sec`,
+`disconnect_timeout_sec`, and `max_retries` - these aren't debugpy options,
+they're forwarded onto the `nvim-dap` adapter this plugin builds, letting you
+tune per-configuration how long `nvim-dap` waits before warning that "the
+debug adapter didn't respond" or before giving up on connecting. This is
+useful for e.g. an `attach` configuration to a slow-to-start remote debugpy,
+where the defaults (`initialize_timeout_sec = 4`, `max_retries = 14`) are too
+short:
+
+```lua
+table.insert(require('dap').configurations.python, {
+  type = 'python',
+  request = 'attach',
+  name = 'Attach (slow remote)',
+  connect = { host = '10.0.0.5', port = 5678 },
+  initialize_timeout_sec = 20,
+  max_retries = 60,
+})
+```
+
 
 ## Python dependencies and virtualenv
 
